@@ -9,15 +9,16 @@ from lib.backtest.RidgeBacktest import *
 from lib.auxiliares.simulateReturns import simulate_returns
 
 nivel_confianza = 0.975
-indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+# indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+indexes = ['SAN.MC', 'BBVA.MC']
 first_date = '2021-06-28'
-start_date = '2023-12-28'
+start_date = '2024-06-26'
 end_date = '2024-06-28'
 # horizontes = [1]
 horizontes = [1, 10]
 # Crear DataFrame inicial con las columnas necesarias
 columnas = ['Real ES', 'Real Excepciones']
-volatilidades_all = ['GJR_GARCH', 'EWMA', 'PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
+volatilidades_all = ['PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
 output_vol = './output/vol_forecasting_ridge.xlsx'
 os.makedirs(os.path.dirname(output_vol), exist_ok=True)
 
@@ -28,7 +29,6 @@ df = pd.DataFrame(columns=columnas, index=indexes)
 
 with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
     for index in indexes:
-        print()
         es, exceptions = es_real(index, nivel_confianza, start_date, end_date)
         df.loc[index, 'Real ES'] = es
         df.loc[index, 'Real Excepciones'] = exceptions
@@ -41,7 +41,6 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
         retornos_reales = returns[start_date:end_date]
         # Calculamos la volatilidad para las fechas deseadas
         for horizonte in horizontes:
-            print()
             print(f'Calculando {index} con horizonte temporal de {horizonte}d')
 
             volatilidades_all = calculate_rolling_volatility(returns, start_date, end_date, horizonte)
@@ -68,6 +67,8 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
                 excepciones, backtest_es = es_test.salida()
                 df.loc[index, col_es] = backtest_es
                 df.loc[index, col_ex] = excepciones
+            print()
+        print()
 
 
 # Convertir cualquier estructura compleja en tipo manejable (float)

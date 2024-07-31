@@ -1,7 +1,8 @@
 import sys
 
 import pandas as pd
-from volatilities import *
+from lib.volatilidades.forecast import *
+
 
 def calculate_rolling_volatility(returns, start_date, end_date, horizon):
     """
@@ -22,8 +23,6 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
 
     # Inicializar el diccionario para almacenar las volatilidades ajustadas
     volatilities = {
-        'EWMA': [],
-        'GJR_GARCH': [],
         'PERCEPTRON': [],
         'LSTM': [],
         'RANDOM_FOREST': []
@@ -35,8 +34,6 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
         historical_returns = returns[:target_date - pd.Timedelta(days=horizon)]
 
         # Calcular la volatilidad ajustada para cada método
-        volatilities['EWMA'].append(ewma_forecasting(historical_returns, horizon))
-        volatilities['GJR_GARCH'].append(gjr_garch_forecasting(historical_returns, horizon))
         volatilities['PERCEPTRON'].append(perceptron_forecasting(historical_returns, horizon))
         volatilities['LSTM'].append(lstm_forecasting(historical_returns, horizon))
         volatilities['RANDOM_FOREST'].append(random_forest_forecasting(historical_returns, horizon))
