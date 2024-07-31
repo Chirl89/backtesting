@@ -31,6 +31,10 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
     i = 1
     # Recorrer el rango de fechas especificado
     for target_date in target_dates:
+        sys.stdout.write('\r')
+        sys.stdout.write(f'Calculando {i} de {n} fechas - Progreso: {(((i-1) / n) * 100):.2f}%')
+        sys.stdout.flush()
+
         historical_returns = returns[:target_date - pd.Timedelta(days=horizon)]
 
         # Calcular la volatilidad ajustada para cada método
@@ -38,11 +42,12 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
         volatilities['LSTM'].append(lstm_forecasting(historical_returns, horizon))
         volatilities['RANDOM_FOREST'].append(random_forest_forecasting(historical_returns, horizon))
 
-        sys.stdout.write('\r')
-        sys.stdout.write(f'Calculando {i} de {n} fechas - Progreso: {((i/n)*100):.2f}%')
-        sys.stdout.flush()
         i += 1
     # Crear un DataFrame con la fecha como índice
     volatility_df = pd.DataFrame(volatilities, index=target_dates)
+
+    sys.stdout.write('\r')
+    sys.stdout.write(f'Calculadas {i} fechas')
+    sys.stdout.flush()
 
     return volatility_df

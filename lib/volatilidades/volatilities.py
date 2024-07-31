@@ -6,7 +6,7 @@ def calculate_volatility(returns, window):
     return returns.rolling(window=window).std()
 
 
-def ewma_forecasting(returns, horizon, lambda_=0.94):
+def ewma_forecasting(returns, lambda_=0.94):
     returns = np.array(returns.dropna())
     ewma_variance = np.zeros_like(returns)
     ewma_variance[0] = returns[0] ** 2
@@ -15,12 +15,12 @@ def ewma_forecasting(returns, horizon, lambda_=0.94):
         ewma_variance[t] = lambda_ * ewma_variance[t - 1] + (1 - lambda_) * returns[t] ** 2
 
     current_volatility = np.sqrt(ewma_variance[-1])
-    adjusted_volatility = current_volatility * np.sqrt(horizon)
+    adjusted_volatility = current_volatility
 
     return adjusted_volatility
 
 
-def gjr_garch_forecasting(returns, horizon):
+def gjr_garch_forecasting(returns):
     returns = returns.dropna()
     scale_factor = 100
     returns_scaled = returns * scale_factor
@@ -31,6 +31,6 @@ def gjr_garch_forecasting(returns, horizon):
     last_conditional_volatility = np.sqrt(model_fit.conditional_volatility.iloc[-1])
     last_conditional_volatility = last_conditional_volatility / scale_factor
 
-    adjusted_volatility = last_conditional_volatility * np.sqrt(horizon)
+    adjusted_volatility = last_conditional_volatility
 
     return adjusted_volatility

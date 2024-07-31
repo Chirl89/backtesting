@@ -9,17 +9,17 @@ from lib.backtest.RidgeBacktest import *
 from lib.auxiliares.simulateReturns import simulate_returns
 
 nivel_confianza = 0.975
-# indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
-indexes = ['SAN.MC', 'BBVA.MC']
-first_date = '2021-06-28'
-start_date = '2024-06-26'
-end_date = '2024-06-28'
+indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+# indexes = ['SAN.MC', 'BBVA.MC']
+first_historical_date = '2021-07-31'
+start_date = '2024-01-30'
+end_date = '2024-07-30'
 # horizontes = [1]
 horizontes = [1, 10]
 # Crear DataFrame inicial con las columnas necesarias
 columnas = ['Real ES', 'Real Excepciones']
 volatilidades_all = ['PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
-output_vol = './output/vol_forecasting_ridge.xlsx'
+output_vol = '../../output/vol_forecasting_ridge.xlsx'
 os.makedirs(os.path.dirname(output_vol), exist_ok=True)
 
 for vol in volatilidades_all:
@@ -33,7 +33,7 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
         df.loc[index, 'Real ES'] = es
         df.loc[index, 'Real Excepciones'] = exceptions
         # Recuperamos los datos históricos
-        data = yf.download(index, first_date, end_date, progress=False)
+        data = yf.download(index, first_historical_date, end_date, progress=False)
         # Calcular los retornos logarítmicos
         data['Log Returns'] = np.log(data['Adj Close'] / data['Adj Close'].shift(1))
         # Los almacenamos en un array limpiando los NA (debería ser sólo la primera fecha)
@@ -92,7 +92,7 @@ with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
 
     for row_num, row_data in enumerate(df.values):
         for col_num, cell_data in enumerate(row_data):
-            if 'ES' in df.columns[col_num]:  # Formatear las columnas ES como porcentaje
+            if 'ES' in df.columns[col_num] and 'Excepciones' not in df.columns[col_num]:  # Formatear las columnas ES como porcentaje
                 worksheet.write(row_num + 1, col_num + 1, cell_data, percentage_format)
             elif 'Excepciones' in df.columns[col_num]:  # Formatear las columnas de excepciones como enteros
                 worksheet.write(row_num + 1, col_num + 1, cell_data, integer_format)
