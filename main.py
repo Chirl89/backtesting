@@ -1,4 +1,4 @@
-import os
+"""import os
 import yfinance as yf
 from lib.volatilidades.rolling import calculate_rolling_volatility
 
@@ -55,3 +55,19 @@ print(es[-1:])
 es_test = EStestMultiQuantile(retornos_reales, lambda: simulate_returns(volatilidades, retornos_reales),
                               1 - nivel_confianza, var_array, es_array, 1000, 1 - nivel_confianza)
 es_test.print()
+"""
+
+import tensorflow as tf
+
+# Verifica si TensorFlow detecta la GPU
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # Configura el uso de la GPU
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        print(f"{len(gpus)} Physical GPUs detected.")
+    except RuntimeError as e:
+        print(e)
+else:
+    print("No GPUs detected by TensorFlow")

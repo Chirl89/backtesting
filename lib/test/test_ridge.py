@@ -10,15 +10,16 @@ from lib.auxiliares.simulateReturns import simulate_returns
 
 nivel_confianza = 0.975
 indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
-# indexes = ['SAN.MC', 'BBVA.MC']
+# indexes = ['SAN.MC']
 first_historical_date = '2021-07-31'
-start_date = '2024-01-30'
+start_date = '2023-07-30'
 end_date = '2024-07-30'
 # horizontes = [1]
 horizontes = [1, 10]
 # Crear DataFrame inicial con las columnas necesarias
 columnas = ['Real ES', 'Real Excepciones']
 volatilidades_all = ['PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
+# volatilidades_all = ['LSTM']
 output_vol = '../../output/vol_forecasting_ridge.xlsx'
 os.makedirs(os.path.dirname(output_vol), exist_ok=True)
 
@@ -30,6 +31,7 @@ df = pd.DataFrame(columns=columnas, index=indexes)
 with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
     for index in indexes:
         es, exceptions = es_real(index, nivel_confianza, start_date, end_date)
+        print("REALES: " + str(exceptions) + " EXCEPCIONES, " + str(es) + " ES")
         df.loc[index, 'Real ES'] = es
         df.loc[index, 'Real Excepciones'] = exceptions
         # Recuperamos los datos históricos
@@ -67,6 +69,8 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
                 excepciones, backtest_es = es_test.salida()
                 df.loc[index, col_es] = backtest_es
                 df.loc[index, col_ex] = excepciones
+                print()
+                print("CALCULADAS: " + str(excepciones) + " EXCEPCIONES, " + str(backtest_es) + " ES")
             print()
         print()
 

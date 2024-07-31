@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Input, Activation
+from tensorflow.keras.layers import LSTM, Dense, Input, Activation, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 import multiprocessing
 import logging
@@ -57,47 +57,54 @@ def perceptron_forecasting(returns, horizon, hidden_layer_sizes=(100, 50), rando
     return predicted_volatility
 
 
-def lstm_forecasting(returns, horizon, window_size=60, volatility_window=100):
-    # Calcular las volatilidades
+def lstm_forecasting(returns, horizon, volatility_window=100, time_step=60):
     volatilities = calculate_volatility(returns, volatility_window).dropna()
+    set_entrenamiento = volatilities.to_frame()
 
-    # Escalar los datos
-    scaler = StandardScaler()
-    volatilities_scaled = scaler.fit_transform(volatilities.values.reshape(-1, 1))
+    # Escalar el set de entrenamiento
+    sc = MinMaxScaler(feature_range=(0, 1))
+    set_entrenamiento_escalado = sc.fit_transform(set_entrenamiento)
 
-    # Preparar los datos de entrenamiento
-    X = []
-    y = []
-    for i in range(len(volatilities_scaled) - window_size - horizon + 1):
-        X.append(volatilities_scaled[i:i + window_size])
-        y.append(volatilities_scaled[i + window_size + horizon - 1])
+    # Parámetros
+    time_step = 60
+      # Configurable para predicción a 'horizon' días
 
-    X = np.array(X)
-    y = np.array(y).reshape(-1, 1)
+    # Crear los conjuntos de entrenamiento
+    X_train = np.array([set_entrenamiento_escalado[i - time_step:i, 0] for i in
+                        range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
+    Y_train = np.array([set_entrenamiento_escalado[i + horizon - 1, 0] for i in
+                        range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
+    X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 
-    # Redefinir las dimensiones de entrada para el LSTM
-    dim_entrada = (X.shape[1], 1)  # Ventana de tiempo y 1 característica
-    dim_salida = 1  # Salida unidimensional
+    # Definir dimensiones de entrada y salida
+    dim_entrada = (X_train.shape[1], 1)
+    dim_salida = 1  # Salida única para el día 'horizon'
+    na = 20
 
-    # Construir el modelo LSTM
+    # Crear el modelo
     modelo = Sequential()
     modelo.add(Input(shape=dim_entrada))
-    modelo.add(LSTM(units=50))
+    modelo.add(LSTM(units=na))
     modelo.add(Dense(units=dim_salida))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
 
-    # Entrenar el modelo
+    # Configurar EarlyStopping
     early_stopping = EarlyStopping(monitor='loss', patience=3, restore_best_weights=True)
-    modelo.fit(X, y, epochs=20, batch_size=32, verbose=0, callbacks=[early_stopping])
 
-    # Predecir la volatilidad para 'horizon' días hacia adelante
-    last_window = volatilities_scaled[-window_size:].reshape(1, window_size, 1)
-    predicted_volatility = modelo.predict(last_window, verbose=0)
+    # Entrenar el modelo
+    modelo.fit(X_train, Y_train, epochs=20, batch_size=32, verbose=0, callbacks=[early_stopping])
 
-    # Invertir la escala para obtener el valor original de la predicción
-    predicted_volatility = scaler.inverse_transform(predicted_volatility).flatten()[0]
-    return predicted_volatility
+    # Realizar predicción para el día 'horizon'
+    ultimo_bloque = set_entrenamiento_escalado[-time_step:]
+    ultimo_bloque = np.reshape(ultimo_bloque, (1, time_step, 1))
+
+    # Predecir la volatilidad para el día 'horizon'
+    prediccion_dia_horizon = modelo.predict(ultimo_bloque, verbose=0)
+
+    # Invertir la escala de la predicción
+    prediccion_dia_horizon = sc.inverse_transform(prediccion_dia_horizon)
+    return prediccion_dia_horizon
 
 
 def random_forest_forecasting(returns, horizon, n_estimators=100, random_state=42, window_size=30, volatility_window=100):
