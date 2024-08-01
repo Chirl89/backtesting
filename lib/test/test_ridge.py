@@ -35,8 +35,13 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
         print("REALES: " + str(exceptions) + " EXCEPCIONES, " + str(es) + " ES")
         df.loc[index, 'Real ES'] = es
         df.loc[index, 'Real Excepciones'] = exceptions
+
         # Recuperamos los datos históricos
-        data = yf.download(index, first_historical_date, end_date, progress=False)
+        # data = yf.download(index, first_historical_date, end_date, progress=False)
+        file_path = f'../../Input/{index}.csv'
+        data = pd.read_csv(file_path, index_col='Date', parse_dates=True)
+        data = data[(data.index >= first_historical_date) & (data.index <= end_date)].dropna()
+
         # Calcular los retornos logarítmicos
         data['Log Returns'] = np.log(data['Adj Close'] / data['Adj Close'].shift(1))
         # Los almacenamos en un array limpiando los NA (debería ser sólo la primera fecha)
