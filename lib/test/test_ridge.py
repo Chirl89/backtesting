@@ -8,6 +8,7 @@ from lib.auxiliares.ES import expected_shortfall
 from lib.backtest.RidgeBacktest import *
 from lib.auxiliares.simulateReturns import simulate_returns
 
+print()
 nivel_confianza = 0.975
 indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 # indexes = ['SAN.MC']
@@ -18,7 +19,7 @@ end_date = '2024-07-30'
 horizontes = [1, 10]
 # Crear DataFrame inicial con las columnas necesarias
 columnas = ['Real ES', 'Real Excepciones']
-volatilidades_all = ['PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
+volatilidades_all = ['EWMA', 'GJR_GARCH', 'PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
 # volatilidades_all = ['LSTM']
 output_vol = '../../output/vol_forecasting_ridge.xlsx'
 os.makedirs(os.path.dirname(output_vol), exist_ok=True)
@@ -53,7 +54,7 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
                 volatilidades_excel.to_excel(writer, sheet_name=f'{index} {horizonte} días')
                 workbook = writer.book
                 worksheet = writer.sheets[f'{index} {horizonte} días']
-
+            print()
             for vol in volatilidades_all:
                 volatilidades = volatilidades_all[vol]
 
@@ -69,7 +70,6 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
                 excepciones, backtest_es = es_test.salida()
                 df.loc[index, col_es] = backtest_es
                 df.loc[index, col_ex] = excepciones
-                print()
                 print("CALCULADAS: " + str(excepciones) + " EXCEPCIONES, " + str(backtest_es) + " ES")
             print()
         print()

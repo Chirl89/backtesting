@@ -29,7 +29,7 @@ def perceptron_forecasting(returns, horizon, hidden_layer_sizes=(100, 50), rando
     :param volatility_window:
     :return:
     """
-    volatilities = calculate_volatility(returns, volatility_window).dropna()
+    volatilities = std_volatility(returns, volatility_window).dropna()
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(volatilities.values.reshape(-1, 1))
 
@@ -58,7 +58,7 @@ def perceptron_forecasting(returns, horizon, hidden_layer_sizes=(100, 50), rando
 
 
 def lstm_forecasting(returns, horizon, volatility_window=100, time_step=60):
-    volatilities = calculate_volatility(returns, volatility_window).dropna()
+    volatilities = std_volatility(returns, volatility_window).dropna()
     set_entrenamiento = volatilities.to_frame()
 
     # Escalar el set de entrenamiento
@@ -108,7 +108,7 @@ def lstm_forecasting(returns, horizon, volatility_window=100, time_step=60):
 
 
 def random_forest_forecasting(returns, horizon, n_estimators=100, random_state=42, window_size=30, volatility_window=100):
-    volatilities = calculate_volatility(returns, volatility_window).dropna()
+    volatilities = std_volatility(returns, volatility_window).dropna()
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(volatilities.values.reshape(-1, 1))
 

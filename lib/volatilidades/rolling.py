@@ -23,9 +23,11 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
 
     # Inicializar el diccionario para almacenar las volatilidades ajustadas
     volatilities = {
-        # 'PERCEPTRON': [],
+        'EWMA': [],
+        'GJR_GARCH': [],
+        'PERCEPTRON': [],
         'LSTM': [],
-        # 'RANDOM_FOREST': []
+        'RANDOM_FOREST': []
     }
     n = len(target_dates)
     i = 1
@@ -38,9 +40,11 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
         historical_returns = returns[:target_date - pd.Timedelta(days=horizon)]
 
         # Calcular la volatilidad ajustada para cada método
-        # volatilities['PERCEPTRON'].append(perceptron_forecasting(historical_returns, horizon))
+        volatilities['EWMA'].append(ewma_volatility(historical_returns, lambda_=0.94))
+        volatilities['GJR_GARCH'].append(gjrgarch_volatility(historical_returns))
+        volatilities['PERCEPTRON'].append(perceptron_forecasting(historical_returns, horizon))
         volatilities['LSTM'].append(lstm_forecasting(historical_returns, horizon))
-        # volatilities['RANDOM_FOREST'].append(random_forest_forecasting(historical_returns, horizon))
+        volatilities['RANDOM_FOREST'].append(random_forest_forecasting(historical_returns, horizon))
 
         i += 1
     # Crear un DataFrame con la fecha como índice
