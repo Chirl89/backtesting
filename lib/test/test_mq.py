@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import yfinance as yf
-from lib.volatilidades.rolling import calculate_rolling_volatility
+from lib.volatilidades.rolling_forecast import calculate_rolling_volatility
 from lib.auxiliares.VaR import var_vol
 from lib.auxiliares.esReal import es_real
 from lib.auxiliares.ES import expected_shortfall

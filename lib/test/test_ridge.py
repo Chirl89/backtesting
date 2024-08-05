@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import yfinance as yf
-from lib.volatilidades.rolling import calculate_rolling_volatility
+from lib.volatilidades.rolling_forecast import calculate_rolling_volatility
 from lib.auxiliares.VaR import var_vol
 from lib.auxiliares.esReal import es_real
 from lib.auxiliares.ES import expected_shortfall
@@ -13,13 +13,24 @@ nivel_confianza = 0.975
 indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 # indexes = ['SAN.MC']
 first_historical_date = '2021-07-31'
-start_date = '2023-07-30'
+start_date = '2024-06-30'
 end_date = '2024-07-30'
 # horizontes = [1]
 horizontes = [1, 10]
 # Crear DataFrame inicial con las columnas necesarias
 columnas = ['Real ES', 'Real Excepciones']
-volatilidades_all = ['EWMA', 'GJR_GARCH', 'PERCEPTRON', 'LSTM', 'RANDOM_FOREST']
+volatilidades_all = ['STD',
+                     'EWMA',
+                     'GJR_GARCH',
+                     'PERCEPTRON_STD',
+                     'LSTM_STD',
+                     'RANDOM_FOREST_STD',
+                     'PERCEPTRON_EWMA',
+                     'LSTM_EWMA',
+                     'RANDOM_FOREST_EWMA',
+                     'PERCEPTRON_GJR_GARCH',
+                     'LSTM_GJR_GARCH',
+                     'RANDOM_FOREST_GJR_GARCH']
 # volatilidades_all = ['LSTM']
 output_vol = '../../output/vol_forecasting_ridge.xlsx'
 os.makedirs(os.path.dirname(output_vol), exist_ok=True)
@@ -79,7 +90,6 @@ with pd.ExcelWriter(output_vol, engine='xlsxwriter') as writer:
             print()
         print()
 
-
 # Convertir cualquier estructura compleja en tipo manejable (float)
 df = df.apply(lambda x: x.map(lambda y: float(y) if isinstance(y, (np.ndarray, list)) else float(y)))
 
@@ -101,7 +111,8 @@ with pd.ExcelWriter(output_path, engine='xlsxwriter') as writer:
 
     for row_num, row_data in enumerate(df.values):
         for col_num, cell_data in enumerate(row_data):
-            if 'ES' in df.columns[col_num] and 'Excepciones' not in df.columns[col_num]:  # Formatear las columnas ES como porcentaje
+            if 'ES' in df.columns[col_num] and 'Excepciones' not in df.columns[
+                col_num]:  # Formatear las columnas ES como porcentaje
                 worksheet.write(row_num + 1, col_num + 1, cell_data, percentage_format)
             elif 'Excepciones' in df.columns[col_num]:  # Formatear las columnas de excepciones como enteros
                 worksheet.write(row_num + 1, col_num + 1, cell_data, integer_format)

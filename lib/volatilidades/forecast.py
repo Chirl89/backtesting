@@ -15,11 +15,11 @@ logging.getLogger('tensorflow').addFilter(lambda record: 'tf.function retracing'
 np.random.seed(4)
 
 
-def perceptron_forecasting(returns, horizon, hidden_layer_sizes=(100, 50), random_state=42, max_iter=5000,
+def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(100, 50), random_state=42, max_iter=5000,
                            learning_rate_init=0.0005, window_size=60, volatility_window=100):
     """
     Modelo perceptron multicapa
-    :param returns:
+    :param vol:
     :param horizon:
     :param hidden_layer_sizes:
     :param random_state:
@@ -29,9 +29,8 @@ def perceptron_forecasting(returns, horizon, hidden_layer_sizes=(100, 50), rando
     :param volatility_window:
     :return:
     """
-    volatilities = std_volatility(returns, volatility_window).dropna()
     scaler = StandardScaler()
-    volatilities_scaled = scaler.fit_transform(volatilities.values.reshape(-1, 1))
+    volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
     # Preparar los datos de entrenamiento
     X = []
@@ -57,9 +56,9 @@ def perceptron_forecasting(returns, horizon, hidden_layer_sizes=(100, 50), rando
     return predicted_volatility
 
 
-def lstm_forecasting(returns, horizon, volatility_window=100, time_step=60):
-    volatilities = std_volatility(returns, volatility_window).dropna()
-    set_entrenamiento = volatilities.to_frame()
+def lstm_forecasting(vol, horizon):
+
+    set_entrenamiento = vol.to_frame()
 
     # Escalar el set de entrenamiento
     sc = MinMaxScaler(feature_range=(0, 1))
@@ -107,10 +106,9 @@ def lstm_forecasting(returns, horizon, volatility_window=100, time_step=60):
     return prediccion_dia_horizon
 
 
-def random_forest_forecasting(returns, horizon, n_estimators=100, random_state=42, window_size=30, volatility_window=100):
-    volatilities = std_volatility(returns, volatility_window).dropna()
+def random_forest_forecasting(vol, horizon, n_estimators=100, random_state=42, window_size=30, volatility_window=100):
     scaler = StandardScaler()
-    volatilities_scaled = scaler.fit_transform(volatilities.values.reshape(-1, 1))
+    volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
     # Preparar los datos de entrenamiento
     X = []
