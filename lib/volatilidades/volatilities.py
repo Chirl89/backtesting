@@ -2,11 +2,13 @@ import numpy as np
 from arch import arch_model
 
 
-def std_volatility(returns, window):
+def calculate_std_volatility(data, window=100):
+    returns = data['Log Returns'].dropna()
     return returns.rolling(window=window).std().dropna()
 
 
-def ewma_volatility(returns, lambda_=0.94):
+def calculate_ewma_volatility(data, lambda_=0.94):
+    returns = data['Log Returns'].dropna()
     ewma_variance = returns ** 2
 
     for t in returns.index[1:]:
@@ -17,8 +19,8 @@ def ewma_volatility(returns, lambda_=0.94):
     return current_volatility
 
 
-def gjrgarch_volatility(returns):
-    scale_factor = 100
+def calculate_gjrgarch_volatility(data, scale_factor=100):
+    returns = data['Log Returns'].dropna()
     returns_scaled = returns * scale_factor
 
     model = arch_model(returns_scaled, vol='GARCH', p=1, o=1, q=1, rescale=False)
@@ -29,17 +31,10 @@ def gjrgarch_volatility(returns):
     return conditional_volatility
 
 
-def calculate_all_volatilities(returns, window=100, lambda_=0.94):
-    std_vol = std_volatility(returns, window)
-    ewma_vol = ewma_volatility(returns, lambda_)
-    garch_vol = gjrgarch_volatility(returns)
-
-    # Obtener la intersección de las fechas disponibles en todas las series
-    common_dates = std_vol.index.intersection(ewma_vol.index).intersection(garch_vol.index)
-
-    # Filtrar las series para que tengan solo las fechas en común
-    std_vol = std_vol.loc[common_dates]
-    ewma_vol = ewma_vol.loc[common_dates]
-    garch_vol = garch_vol.loc[common_dates]
-
-    return std_vol, ewma_vol, garch_vol
+def calculate_volatilities(data):
+    volatilities = {
+        'STD': calculate_std_volatility(data),
+        'EWMA': calculate_ewma_volatility(data),
+        'GJR_GARCH': calculate_gjrgarch_volatility(data)
+    }
+    return volatilities

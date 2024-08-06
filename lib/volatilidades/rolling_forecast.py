@@ -1,12 +1,12 @@
 import sys
-
+import gc
 import pandas as pd
 from lib.volatilidades.forecast import *
 
 
 def calculate_rolling_volatility(returns, start_date, end_date, horizon):
     """
-    Calcula la volatilidad ajustada usando EWMA para cada día en el rango de fechas especificado.
+    Calcula la volatilidad ajustada para cada día en el rango de fechas especificado.
 
     Parámetros:
     returns (pd.Series): Serie de retornos del activo.
@@ -37,7 +37,7 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
         'RANDOM_FOREST_GJR_GARCH': []
     }
 
-    vol_std, vol_ewma, vol_gjr_garch = calculate_all_volatilities(returns=returns, window=100, lambda_=0.94)
+    vol_std, vol_ewma, vol_gjr_garch = calculate_all_volatilities(returns, window=100, lambda_=0.94)
 
     n = len(target_dates)
     i = 1
@@ -78,3 +78,66 @@ def calculate_rolling_volatility(returns, start_date, end_date, horizon):
     sys.stdout.flush()
 
     return volatility_df
+
+
+def roll_perceptron_forecast(vol, start_date, end_date, horizon):
+    n = len(vol[start_date:end_date])
+    i = 0
+    forecast = {'VOLATILITY': []}
+    for date in vol[start_date:end_date].index:
+        i = i + 1
+        sys.stdout.write('\r')
+        sys.stdout.write(f'Calculando {i} de {n} fechas - Progreso: {(((i - 1) / n) * 100):.2f}%')
+        sys.stdout.flush()
+        vol_date = vol[:date]
+        forecast_data = perceptron_forecasting(vol_date[:-horizon], horizon)
+        forecast['VOLATILITY'].append(forecast_data)
+        del forecast_data
+        gc.collect()
+    forecast_df = pd.DataFrame(forecast, index=vol[start_date:end_date].index).dropna()
+    sys.stdout.write('\r')
+    sys.stdout.write(f'Calculadas {i} de {n} fechas - Progreso: {((i / n) * 100):.2f}%')
+    sys.stdout.flush()
+    return forecast_df
+
+
+def roll_lstm_forecast(vol, start_date, end_date, horizon):
+    n = len(vol[start_date:end_date])
+    i = 0
+    forecast = {'VOLATILITY': []}
+    for date in vol[start_date:end_date].index:
+        i = i + 1
+        sys.stdout.write('\r')
+        sys.stdout.write(f'Calculando {i} de {n} fechas - Progreso: {(((i - 1) / n) * 100):.2f}%')
+        sys.stdout.flush()
+        vol_date = vol[:date]
+        forecast_data = lstm_forecasting(vol_date[:-horizon], horizon)
+        forecast['VOLATILITY'].append(forecast_data)
+        del forecast_data
+        gc.collect()
+    forecast_df = pd.DataFrame(forecast, index=vol[start_date:end_date].index).dropna()
+    sys.stdout.write('\r')
+    sys.stdout.write(f'Calculadas {i} de {n} fechas - Progreso: {((i / n) * 100):.2f}%')
+    sys.stdout.flush()
+    return forecast_df
+
+
+def roll_random_forest_forecast(vol, start_date, end_date, horizon):
+    n = len(vol[start_date:end_date])
+    i = 0
+    forecast = {'VOLATILITY': []}
+    for date in vol[start_date:end_date].index:
+        i = i + 1
+        sys.stdout.write('\r')
+        sys.stdout.write(f'Calculando {i} de {n} fechas - Progreso: {(((i - 1) / n) * 100):.2f}%')
+        sys.stdout.flush()
+        vol_date = vol[:date]
+        forecast_data = random_forest_forecasting(vol_date[:-horizon], horizon)
+        forecast['VOLATILITY'].append(forecast_data)
+        del forecast_data
+        gc.collect()
+    forecast_df = pd.DataFrame(forecast, index=vol[start_date:end_date].index).dropna()
+    sys.stdout.write('\r')
+    sys.stdout.write(f'Calculadas {i} de {n} fechas - Progreso: {((i / n) * 100):.2f}%')
+    sys.stdout.flush()
+    return forecast_df

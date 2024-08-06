@@ -1,11 +1,10 @@
-import numpy as np
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Input, Activation, Dropout
+from tensorflow.keras.layers import LSTM, Dense, Input, Activation
 from tensorflow.keras.callbacks import EarlyStopping
 import multiprocessing
 import logging
@@ -16,9 +15,9 @@ np.random.seed(4)
 
 
 def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(100, 50), random_state=42, max_iter=5000,
-                           learning_rate_init=0.0005, window_size=60, volatility_window=100):
+                           learning_rate_init=0.0005, window_size=60):
     """
-    Modelo perceptron multicapa
+    Modelo perceptron multicapa optimizado.
     :param vol:
     :param horizon:
     :param hidden_layer_sizes:
@@ -26,20 +25,14 @@ def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(100, 50), random_st
     :param max_iter:
     :param learning_rate_init:
     :param window_size:
-    :param volatility_window:
     :return:
     """
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
-    # Preparar los datos de entrenamiento
-    X = []
-    y = []
-    for i in range(len(volatilities_scaled) - window_size - horizon + 1):
-        X.append(volatilities_scaled[i:i + window_size].flatten())
-        y.append(volatilities_scaled[i + window_size + horizon - 1])
-    X = np.array(X)
-    y = np.array(y).ravel()
+    # Preparar los datos de entrenamiento de manera vectorizada
+    X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in range(len(volatilities_scaled) - window_size - horizon + 1)])
+    y = volatilities_scaled[window_size + horizon - 1 : len(volatilities_scaled)].flatten()
 
     # Entrenar el modelo
     mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, random_state=random_state,
@@ -55,7 +48,6 @@ def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(100, 50), random_st
 
     return predicted_volatility
 
-
 def lstm_forecasting(vol, horizon):
 
     set_entrenamiento = vol.to_frame()
@@ -66,25 +58,18 @@ def lstm_forecasting(vol, horizon):
 
     # Parámetros
     time_step = 60
-      # Configurable para predicción a 'horizon' días
 
-    # Crear los conjuntos de entrenamiento
-    X_train = np.array([set_entrenamiento_escalado[i - time_step:i, 0] for i in
-                        range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
-    Y_train = np.array([set_entrenamiento_escalado[i + horizon - 1, 0] for i in
-                        range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
+    # Crear los conjuntos de entrenamiento de forma vectorizada
+    X_train = np.array([set_entrenamiento_escalado[i - time_step:i, 0] for i in range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
+    Y_train = set_entrenamiento_escalado[time_step + horizon - 1 : len(set_entrenamiento_escalado), 0]
+
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
-
-    # Definir dimensiones de entrada y salida
-    dim_entrada = (X_train.shape[1], 1)
-    dim_salida = 1  # Salida única para el día 'horizon'
-    na = 20
 
     # Crear el modelo
     modelo = Sequential()
-    modelo.add(Input(shape=dim_entrada))
-    modelo.add(LSTM(units=na))
-    modelo.add(Dense(units=dim_salida))
+    modelo.add(Input(shape=(X_train.shape[1], 1)))
+    modelo.add(LSTM(units=20))
+    modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
 
@@ -103,21 +88,15 @@ def lstm_forecasting(vol, horizon):
 
     # Invertir la escala de la predicción
     prediccion_dia_horizon = sc.inverse_transform(prediccion_dia_horizon)
-    return prediccion_dia_horizon
+    return prediccion_dia_horizon.flatten()[0]
 
-
-def random_forest_forecasting(vol, horizon, n_estimators=100, random_state=42, window_size=30, volatility_window=100):
+def random_forest_forecasting(vol, horizon, n_estimators=100, random_state=42, window_size=30):
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
-    # Preparar los datos de entrenamiento
-    X = []
-    y = []
-    for i in range(len(volatilities_scaled) - window_size - horizon + 1):
-        X.append(volatilities_scaled[i:i + window_size].flatten())
-        y.append(volatilities_scaled[i + window_size + horizon - 1])
-    X = np.array(X)
-    y = np.array(y).ravel()
+    # Preparar los datos de entrenamiento de forma vectorizada
+    X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in range(len(volatilities_scaled) - window_size - horizon + 1)])
+    y = volatilities_scaled[window_size + horizon - 1 : len(volatilities_scaled)].flatten()
 
     rf = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state, n_jobs=multiprocessing.cpu_count(), verbose=0)
     rf.fit(X, y)

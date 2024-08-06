@@ -1,73 +1,55 @@
-"""import os
-import yfinance as yf
-from lib.volatilidades.rolling import calculate_rolling_volatility
-
-from lib.auxiliares.VaR import var_vol
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from lib.data.data import Data
 from lib.auxiliares.esReal import es_real
-from lib.auxiliares.ES import expected_shortfall
-from lib.backtest.MQBacktest import *
-from lib.auxiliares.simulateReturns import simulate_returns
+from lib.volatilidades.rolling_forecast import *
+from numba import jit
+# Configuración de parámetros
+indexes = ['SAN.MC']
+input_method = 'csv'
+start_get_data = '2021-07-30'
+end_get_data = '2024-07-30'
+start_calculation_date = '2023-07-30'
+end_calculation_date = '2024-07-30'
+confidence_level = 0.975
+horizons = [1, 10]
 
-nivel_confianza = 0.975
-index = 'SAN.MC'
-first_date = '2021-05-28'
-start_date = '2023-05-28'
-end_date = '2024-06-28'
-horizonte = 1
-es_real(index, nivel_confianza, start_date, end_date)
-# Recuperamos los datos históricos
-data = yf.download(index, first_date, end_date)
-# Calcular los retornos logarítmicos
-data['Log Returns'] = np.log(data['Adj Close'] / data['Adj Close'].shift(1)).dropna()
-# Los almacenamos en un array limpiando los NA (debería ser sólo la primera fecha)
-returns = data['Log Returns'].dropna()
-retornos_pasados = returns[first_date:start_date]
-sample_mu = np.mean(retornos_pasados)
-sample_sigma = np.std(retornos_pasados)
-retornos_reales = returns[start_date:end_date]
-estimaciones = len(retornos_reales)
-# Calculamos la volatilidad para las fechas deseadas
-volatilidades_all = calculate_rolling_volatility(returns, start_date, end_date, horizonte)
-volatilidades = volatilidades_all['EWMA']
 
-var = var_vol(volatilidades, nivel_confianza)
-var_array = np.array(var)
-es = expected_shortfall(volatilidades, nivel_confianza)
-es_array = np.array(es)
+# Función para procesar datos para un índice
 
-output_path = './output/comparativa_volatilidades.xlsx'
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
+def expensive_computation(vol_data, start_date, end_date, horizon):
+    # Aquí iría el código que necesitas optimizar
+    return roll_perceptron_forecast(vol_data, start_date, end_date, horizon)
 
-# Save DataFrame to Excel with comma as decimal separator
-volatilidades_all.to_excel(output_path, float_format="%.6f")
+@jit
+def optimized_forecast(vol_data, start_date, end_date, horizon):
+    return expensive_computation(vol_data, start_date, end_date, horizon)
 
-# Convert numbers to strings and replace '.' with ','
-for col in volatilidades_all.select_dtypes(include=[np.number]).columns:
-    volatilidades_all[col] = volatilidades_all[col].apply(lambda x: f"{x:.6f}".replace('.', ','))
+def process_index(index):
+    input_data = Data(index, start_get_data, end_get_data, input_method)
+    df = input_data.data
+    df['Log Returns'] = np.log(df['Adj Close'] / df['Adj Close'].shift(1))
+    df.dropna(inplace=True)
 
-# Save the DataFrame with the modified decimal separator to Excel
-volatilidades_all.to_excel(output_path)
+    es_real_result = es_real(df, confidence_level, start_calculation_date, end_calculation_date)
+    volatilities = calculate_volatilities(df)
 
-print(f"Comparative results have been saved to {output_path}")
+    forecast_dict = {}
+    for vol, vol_data in volatilities.items():
+        forecast_dict[vol] = {}
+        for horizon in horizons:
+            forecast_data = optimized_forecast(vol_data, start_calculation_date, end_calculation_date, horizon)
+            forecast_dict[vol][horizon] = {'PERCEPTRON': forecast_data}
 
-print(es[-1:])
+    return index, df, es_real_result, volatilities, forecast_dict
 
-es_test = EStestMultiQuantile(retornos_reales, lambda: simulate_returns(volatilidades, retornos_reales),
-                              1 - nivel_confianza, var_array, es_array, 1000, 1 - nivel_confianza)
-es_test.print()
-"""
-
-import tensorflow as tf
-
-# Verifica si TensorFlow detecta la GPU
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-    try:
-        # Configura el uso de la GPU
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-        print(f"{len(gpus)} Physical GPUs detected.")
-    except RuntimeError as e:
-        print(e)
-else:
-    print("No GPUs detected by TensorFlow")
+# Inicialización del diccionario
+index_dict = {item: {} for item in indexes}
+with ThreadPoolExecutor() as executor:
+    futures = {executor.submit(process_index, index): index for index in indexes}
+    for future in as_completed(futures):
+        index, df, es_real_result, volatilities, forecast_dict = future.result()
+        index_dict[index]['Data'] = df
+        index_dict[index]['ES Real'] = es_real_result
+        index_dict[index]['Volatilities'] = volatilities
+        index_dict[index]['Forecast'] = forecast_dict
+        gc.collect()

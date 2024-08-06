@@ -1,18 +1,9 @@
-import yfinance as yf
 import numpy as np
-import pandas as pd
 
-def es_real(index, confidence_level, start_date, end_date):
-    # Definir el periodo de tiempo
 
-    # Descargar datos del índice SAN.MC
-    #data = yf.download(index, start=start_date, end=end_date, progress=False)
-    file_path = f'../../Input/{index}.csv'
-    data = pd.read_csv(file_path, index_col='Date', parse_dates=True)
-    data = data[(data.index >= start_date) & (data.index <= end_date)].dropna()
+def es_real(data, confidence_level, start_date, end_date):
 
-    # Calcular los retornos logarítmicos
-    data['Log Returns'] = np.log(data['Adj Close'] / data['Adj Close'].shift(1)).dropna()
+    data = data[start_date:end_date].copy()
 
     # Calcular el VaR al 97.5% de confianza
     var = np.percentile(data['Log Returns'].dropna(), (1 - confidence_level) * 100)
