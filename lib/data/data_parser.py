@@ -1,6 +1,6 @@
-import numpy as np
 from lib.auxiliares.esReal import es_real
 from lib.volatilidades.volatilities import *
+
 
 class ProcessData:
     def __init__(self, index_instance, data_instance):

@@ -15,7 +15,7 @@ logging.getLogger('tensorflow').addFilter(lambda record: 'tf.function retracing'
 np.random.seed(4)
 
 
-def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(50, ), random_state=42, max_iter=1000,
+def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(20, ), random_state=42, max_iter=1000,
                            learning_rate_init=0.001, window_size=60):
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
@@ -62,7 +62,7 @@ def lstm_forecasting(vol, horizon):
     gc.collect()
     modelo = Sequential()
     modelo.add(Input(shape=(X_train.shape[1], 1)))
-    modelo.add(LSTM(units=10))
+    modelo.add(LSTM(units=5))
     modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
@@ -85,7 +85,7 @@ def lstm_forecasting(vol, horizon):
     return prediccion_dia_horizon.flatten()[0]
 
 
-def random_forest_forecasting(vol, horizon, n_estimators=50, random_state=42, window_size=30):
+def random_forest_forecasting(vol, horizon, n_estimators=15, random_state=42, window_size=60):
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
