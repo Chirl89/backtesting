@@ -114,6 +114,26 @@ class EStestRidge:
         print('Number of Monte Carlo simulations: ' + str(self.nSim))
         print('----------------------------------------------------------------')
 
-    def salida(self):
-        return self.VaR_breaches, self.mean_breach_value
+    def get_results_summary(self):
+        """
+        Returns a summary of the test results and other useful information as a string.
+        """
+        result = []
+        result.append('----------------------------------------------------------------')
+        result.append('        Ridge Expected Shortfall Test by Simulation             ')
+        result.append('----------------------------------------------------------------')
+        result.append('Number of observations: ' + str(self.T))
+        result.append('Number of VaR breaches: ' + str(self.VaR_breaches))
+        result.append('Expected number of VaR breaches: ' + str(self.T * self.VaRLevel))
+        result.append('ES Statistic: ' + str(self.Z_obs))
+        result.append('Expected ES Statistic under the null hypothesis: ' + str(0))
+        result.append('Critical Value at α = ' + str(self.alpha) + ': ' + str(self.critical_value))
+        result.append('p-value: ' + str(self.p_value))
+        result.append('Number of Monte Carlo simulations: ' + str(self.nSim))
+        result.append('----------------------------------------------------------------')
 
+        # Unir la lista en una sola cadena separada por saltos de línea
+        return '\n'.join(result)
+
+    def backtest_out(self):
+        return self.VaR_breaches, self.mean_breach_value

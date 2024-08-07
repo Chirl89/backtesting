@@ -1,5 +1,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import gc
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -14,96 +15,96 @@ logging.getLogger('tensorflow').addFilter(lambda record: 'tf.function retracing'
 np.random.seed(4)
 
 
-def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(100, 50), random_state=42, max_iter=5000,
-                           learning_rate_init=0.0005, window_size=60):
-    """
-    Modelo perceptron multicapa optimizado.
-    :param vol:
-    :param horizon:
-    :param hidden_layer_sizes:
-    :param random_state:
-    :param max_iter:
-    :param learning_rate_init:
-    :param window_size:
-    :return:
-    """
+def perceptron_forecasting(vol, horizon, hidden_layer_sizes=(50, ), random_state=42, max_iter=1000,
+                           learning_rate_init=0.001, window_size=60):
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
-    # Preparar los datos de entrenamiento de manera vectorizada
     X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in range(len(volatilities_scaled) - window_size - horizon + 1)])
     y = volatilities_scaled[window_size + horizon - 1 : len(volatilities_scaled)].flatten()
 
-    # Entrenar el modelo
+    # Una vez que el modelo está entrenado, puedes eliminar X e y
     mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, random_state=random_state,
                        max_iter=max_iter, learning_rate_init=learning_rate_init, verbose=0)
     mlp.fit(X, y)
 
-    # Predecir la volatilidad para 'horizon' días hacia adelante
+    # Liberar X e y después de entrenar el modelo
+    del X, y
+    gc.collect()
+
     last_window = volatilities_scaled[-window_size:].flatten().reshape(1, -1)
     predicted_volatility = mlp.predict(last_window)
+    del last_window  # Liberar last_window si no se va a utilizar más
 
-    # Invertir la escala para obtener el valor original de la predicción
     predicted_volatility = scaler.inverse_transform(predicted_volatility.reshape(-1, 1)).flatten()[0]
 
+    # Liberar volatilities_scaled si no se necesita más
+    del volatilities_scaled
+    gc.collect()
     return predicted_volatility
 
-def lstm_forecasting(vol, horizon):
 
+def lstm_forecasting(vol, horizon):
     set_entrenamiento = vol.to_frame()
 
-    # Escalar el set de entrenamiento
     sc = MinMaxScaler(feature_range=(0, 1))
     set_entrenamiento_escalado = sc.fit_transform(set_entrenamiento)
 
-    # Parámetros
     time_step = 60
 
-    # Crear los conjuntos de entrenamiento de forma vectorizada
     X_train = np.array([set_entrenamiento_escalado[i - time_step:i, 0] for i in range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
     Y_train = set_entrenamiento_escalado[time_step + horizon - 1 : len(set_entrenamiento_escalado), 0]
 
     X_train = np.reshape(X_train, (X_train.shape[0], X_train.shape[1], 1))
 
-    # Crear el modelo
+    # Después de preparar X_train y Y_train, puedes liberar set_entrenamiento_escalado
+    del set_entrenamiento_escalado
+    gc.collect()
     modelo = Sequential()
     modelo.add(Input(shape=(X_train.shape[1], 1)))
-    modelo.add(LSTM(units=20))
+    modelo.add(LSTM(units=10))
     modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
 
-    # Configurar EarlyStopping
-    early_stopping = EarlyStopping(monitor='loss', patience=3, restore_best_weights=True)
+    early_stopping = EarlyStopping(monitor='loss', patience=2, restore_best_weights=True)
 
-    # Entrenar el modelo
-    modelo.fit(X_train, Y_train, epochs=20, batch_size=32, verbose=0, callbacks=[early_stopping])
+    modelo.fit(X_train, Y_train, epochs=10, batch_size=16, verbose=0, callbacks=[early_stopping])
 
-    # Realizar predicción para el día 'horizon'
-    ultimo_bloque = set_entrenamiento_escalado[-time_step:]
+    # Después de entrenar el modelo, puedes liberar X_train y Y_train
+    del X_train, Y_train
+
+    ultimo_bloque = set_entrenamiento[-time_step:]
     ultimo_bloque = np.reshape(ultimo_bloque, (1, time_step, 1))
 
-    # Predecir la volatilidad para el día 'horizon'
     prediccion_dia_horizon = modelo.predict(ultimo_bloque, verbose=0)
 
-    # Invertir la escala de la predicción
+    del ultimo_bloque  # Liberar ultimo_bloque después de la predicción
+    gc.collect()
     prediccion_dia_horizon = sc.inverse_transform(prediccion_dia_horizon)
     return prediccion_dia_horizon.flatten()[0]
 
-def random_forest_forecasting(vol, horizon, n_estimators=100, random_state=42, window_size=30):
+
+def random_forest_forecasting(vol, horizon, n_estimators=50, random_state=42, window_size=30):
     scaler = StandardScaler()
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
 
-    # Preparar los datos de entrenamiento de forma vectorizada
     X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in range(len(volatilities_scaled) - window_size - horizon + 1)])
     y = volatilities_scaled[window_size + horizon - 1 : len(volatilities_scaled)].flatten()
 
     rf = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state, n_jobs=multiprocessing.cpu_count(), verbose=0)
     rf.fit(X, y)
 
+    # Después de entrenar el modelo, puedes liberar X e y
+    del X, y
+    gc.collect()
     last_window = volatilities_scaled[-window_size:].flatten().reshape(1, -1)
     predicted_volatility = rf.predict(last_window)
+    del last_window  # Liberar last_window si no se va a utilizar más
 
     predicted_volatility = scaler.inverse_transform(predicted_volatility.reshape(-1, 1)).flatten()[0]
 
+    # Liberar volatilities_scaled si no se necesita más
+    del volatilities_scaled
+    gc.collect()
     return predicted_volatility
