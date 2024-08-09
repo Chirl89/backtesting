@@ -2,7 +2,7 @@ import time
 from lib.dicts.index import Index
 from lib.data.data import DataImporter, DataExporter
 from lib.data.data_parser import ProcessData
-from lib.forecast.forecast import Forecast
+from lib.forecast.forecast import *
 from lib.backtest.backtest import BacktestManager
 
 indexes = ['SAN.MC', 'BBVA.MC']#, 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
@@ -36,9 +36,11 @@ if __name__ == "__main__":
     backtest_manager = BacktestManager(data_dict, forecast_dict, confidence_level)
     backtest_manager.run_backtest()
     backtest_dict = backtest_manager.get_backtest_dict()
-
+    print()
     exporter = DataExporter(data_dict, forecast_dict, backtest_dict)
     exporter.export_to_excel()
+
+    forecast_instance.clean_up_models()
 
     end_time = time.time()
 

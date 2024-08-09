@@ -1,4 +1,9 @@
 import os
+import logging
+import tensorflow as tf
+# Suprimir advertencias de TensorFlow
+tf.get_logger().setLevel(logging.ERROR)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import gc
 import numpy as np
 from sklearn.neural_network import MLPRegressor
@@ -8,6 +13,8 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Input, Activation
 from tensorflow.keras.callbacks import EarlyStopping
 import joblib
+from tensorflow.keras.backend import clear_session
+
 
 # 1. Perceptron
 
@@ -36,6 +43,7 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(20,), random_
     del X, y, volatilities_scaled
     gc.collect()
 
+
 def perceptron_forecast(vol, model, scaler, horizon, window_size=60):
     # Preprocesamiento de los datos
     volatilities_scaled = scaler.transform(vol.values.reshape(-1, 1))
@@ -50,6 +58,7 @@ def perceptron_forecast(vol, model, scaler, horizon, window_size=60):
     gc.collect()
 
     return predicted_volatility
+
 
 # 2. LSTM
 
@@ -85,6 +94,11 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     del X, Y, set_entrenamiento_escalado
     gc.collect()
 
+
+def predict(model, data):
+    return model(data, training=False)
+
+
 def lstm_forecast(vol, model, scaler, horizon, time_step=60):
     # Preprocesamiento de los datos
     set_entrenamiento = vol.to_frame()
@@ -92,8 +106,11 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
     ultimo_bloque = set_entrenamiento_escalado[-time_step:]
     ultimo_bloque = np.reshape(ultimo_bloque, (1, time_step, 1))
 
+    # Limpiar sesión para evitar acumulación de gráficos
+    clear_session()
+
     # Predicción
-    prediccion_dia_horizon = model.predict(ultimo_bloque, verbose=0)
+    prediccion_dia_horizon = predict(model, ultimo_bloque)
     prediccion_dia_horizon = scaler.inverse_transform(prediccion_dia_horizon)
 
     # Liberar memoria
@@ -101,6 +118,7 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
     gc.collect()
 
     return prediccion_dia_horizon.flatten()[0]
+
 
 # 3. Random Forest
 
@@ -126,6 +144,7 @@ def random_forest_train(vol, model_path, horizon, n_estimators=15, random_state=
     # Liberar memoria
     del X, y, volatilities_scaled
     gc.collect()
+
 
 def random_forest_forecast(vol, model, scaler, horizon, window_size=60):
     # Preprocesamiento de los datos

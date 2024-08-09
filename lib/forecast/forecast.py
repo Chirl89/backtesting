@@ -1,10 +1,10 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import sys
 import gc
-import os
 import pandas as pd
 from copy import deepcopy
-from lib.volatilidades.forecast import perceptron_train, perceptron_forecast, lstm_train, lstm_forecast, \
-    random_forest_train, random_forest_forecast
+from lib.volatilidades.forecast import *
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing import Manager, Lock
 from tensorflow.keras.models import load_model
