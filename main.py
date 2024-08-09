@@ -2,14 +2,14 @@ import time
 from lib.dicts.index import Index
 from lib.data.data import DataImporter, DataExporter
 from lib.data.data_parser import ProcessData
-from lib.forecast.forecast_pycharm import Forecast
+from lib.forecast.forecast import Forecast
 from lib.backtest.backtest import BacktestManager
 
-indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+indexes = ['SAN.MC', 'BBVA.MC']#, 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 input_method = 'yf'
 start_get_data = '2021-07-30'
 end_get_data = '2024-07-30'
-start_calculation_date = '2023-07-30'
+start_calculation_date = '2024-07-25'
 end_calculation_date = '2024-07-30'
 confidence_level = 0.975
 horizons = [1, 10]
