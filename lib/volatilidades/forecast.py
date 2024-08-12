@@ -1,6 +1,7 @@
 import os
 import logging
 import tensorflow as tf
+
 # Suprimir advertencias de TensorFlow
 tf.get_logger().setLevel(logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -18,7 +19,7 @@ from tensorflow.keras.backend import clear_session
 
 # 1. Perceptron
 
-def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(20,), random_state=42, max_iter=1000,
+def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), random_state=42, max_iter=5000,
                      learning_rate_init=0.001, window_size=60):
     # Definir la ruta del scaler
     scaler_path = model_path.replace('.pkl', '_scaler.pkl')
@@ -31,8 +32,13 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(20,), random_
     y = volatilities_scaled[window_size + horizon - 1: len(volatilities_scaled)].flatten()
 
     # Entrenamiento del modelo
-    mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes, random_state=random_state, max_iter=max_iter,
-                       learning_rate_init=learning_rate_init, verbose=0)
+    mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes,
+                       random_state=random_state,
+                       max_iter=max_iter,
+                       learning_rate_init=learning_rate_init,
+                       alpha=0.001,  # Regularización L2
+                       early_stopping=True,
+                       verbose=0)
     mlp.fit(X, y)
 
     # Guardar el modelo y el scaler
