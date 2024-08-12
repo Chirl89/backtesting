@@ -25,11 +25,12 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), rand
     scaler_path = model_path.replace('.pkl', '_scaler.pkl')
 
     # Preprocesamiento de los datos
-    scaler = StandardScaler()
+    scaler = MinMaxScaler()  # Usar MinMaxScaler en lugar de StandardScaler
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
     X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in
                   range(len(volatilities_scaled) - window_size - horizon + 1)])
-    y = volatilities_scaled[window_size + horizon - 1: len(volatilities_scaled)].flatten()
+    y = volatilities_scaled[
+               window_size + horizon - 1: len(volatilities_scaled)].flatten()  # Predecir log-volatilidades
 
     # Entrenamiento del modelo
     mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes,
@@ -54,10 +55,13 @@ def perceptron_forecast(vol, model, scaler, horizon, window_size=60):
     # Preprocesamiento de los datos
     volatilities_scaled = scaler.transform(vol.values.reshape(-1, 1))
     last_window = volatilities_scaled[-window_size:].flatten().reshape(1, -1)
-    predicted_volatility = model.predict(last_window)
+    predicted_volatility = model.predict(last_window)  # Convertir log-volatilidad a volatilidad
 
     # Invertir la escala de la predicción
     predicted_volatility = scaler.inverse_transform(predicted_volatility.reshape(-1, 1)).flatten()[0]
+
+    # Asegurarse de que la predicción sea no negativa
+    predicted_volatility = max(predicted_volatility, 0)
 
     # Liberar memoria
     del volatilities_scaled, last_window
