@@ -88,13 +88,13 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     # Entrenamiento del modelo
     modelo = Sequential()
     modelo.add(Input(shape=(X.shape[1], 1)))
-    modelo.add(LSTM(units=5))
+    modelo.add(LSTM(units=20))
     modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
 
     early_stopping = EarlyStopping(monitor='loss', patience=2, restore_best_weights=True)
-    modelo.fit(X, Y, epochs=10, batch_size=16, verbose=0, callbacks=[early_stopping])
+    modelo.fit(X, Y, epochs=10, batch_size=32, verbose=0, callbacks=[early_stopping])
 
     # Guardar el modelo y el scaler
     modelo.save(model_path)
