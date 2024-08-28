@@ -91,6 +91,10 @@ class DataExporter:
         # Crear listas para almacenar los datos estructurados para cada pestaña
         backtest_ridge_salida_data = []
         backtest_ridge_test_data = []
+        backtest_multiquantile_salida_data = []
+        backtest_multiquantile_test_data = []
+        backtest_fisslerziegel_salida_data = []
+        backtest_fisslerziegel_test_data = []
         es_real_data = []
         volatilities_data = []
         data_data = []
@@ -102,7 +106,9 @@ class DataExporter:
                 for horizon, forecast_models in horizons.items():
                     for model, results in forecast_models.items():
                         # Separar los valores de 'BacktestRidge - Salida' en dos columnas
-                        excepciones, es = results.get('BacktestRidge - Salida', (None, None))
+                        excepciones_r, es_r = results.get('BacktestRidge - Salida', (None, None))
+                        excepciones_mq, es_mq = results.get('BacktestMQ - Salida', (None, None))
+                        excepciones_fz, es_fz = results.get('BacktestFZ - Salida', (None, None))
 
                         # Agregar datos a la lista para la pestaña BacktestRidge - Salida
                         backtest_ridge_salida_data.append({
@@ -110,8 +116,26 @@ class DataExporter:
                             'Volatility': volatility,
                             'Horizon': horizon,
                             'Model': model,
-                            'Excepciones': excepciones,
-                            'ES': es
+                            'Excepciones': excepciones_r,
+                            'ES': es_r
+                        })
+
+                        backtest_multiquantile_salida_data.append({
+                            'Index': index,
+                            'Volatility': volatility,
+                            'Horizon': horizon,
+                            'Model': model,
+                            'Excepciones': excepciones_mq,
+                            'ES': es_mq
+                        })
+
+                        backtest_fisslerziegel_salida_data.append({
+                            'Index': index,
+                            'Volatility': volatility,
+                            'Horizon': horizon,
+                            'Model': model,
+                            'Excepciones': excepciones_fz,
+                            'ES': es_fz
                         })
 
                         # Agregar datos a la lista para la pestaña BacktestRidge - Test
@@ -121,6 +145,24 @@ class DataExporter:
                             'Horizon': horizon,
                             'Model': model,
                             'BacktestRidge - Test': results.get('BacktestRidge - Test', '')
+                        })
+
+                        # Agregar datos a la lista para la pestaña BacktestRidge - Test
+                        backtest_multiquantile_test_data.append({
+                            'Index': index,
+                            'Volatility': volatility,
+                            'Horizon': horizon,
+                            'Model': model,
+                            'BacktestRidge - Test': results.get('BacktestMQ - Test', '')
+                        })
+
+                        # Agregar datos a la lista para la pestaña BacktestRidge - Test
+                        backtest_fisslerziegel_test_data.append({
+                            'Index': index,
+                            'Volatility': volatility,
+                            'Horizon': horizon,
+                            'Model': model,
+                            'BacktestRidge - Test': results.get('BacktestFZ - Test', '')
                         })
 
         # Iterar sobre index_dict para crear los datos adicionales
@@ -136,12 +178,12 @@ class DataExporter:
             # ES Real (separar en dos columnas)
             es_real_values = content.get('ES Real')
             if es_real_values is not None:
-                es, excepciones = es_real_values
-                if not isinstance(excepciones, (list, pd.Series)):
-                    excepciones = [excepciones]
-                if not isinstance(es, (list, pd.Series)):
-                    es = [es]
-                for exc, es_val in zip(excepciones, es):
+                es_r, excepciones_r = es_real_values
+                if not isinstance(excepciones_r, (list, pd.Series)):
+                    excepciones_r = [excepciones_r]
+                if not isinstance(es_r, (list, pd.Series)):
+                    es_r = [es_r]
+                for exc, es_val in zip(excepciones_r, es_r):
                     es_real_data.append({
                         'Index': index,
                         'Excepciones': exc,
@@ -177,6 +219,11 @@ class DataExporter:
         # Convertir las listas en DataFrames
         df_backtest_ridge_salida = pd.DataFrame(backtest_ridge_salida_data)
         df_backtest_ridge_test = pd.DataFrame(backtest_ridge_test_data)
+        df_backtest_multiquantile_salida = pd.DataFrame(backtest_multiquantile_salida_data)
+        df_backtest_multiquantile_test = pd.DataFrame(backtest_multiquantile_test_data)
+        df_backtest_fisslerziegel_salida = pd.DataFrame(backtest_fisslerziegel_salida_data)
+        df_backtest_fisslerziegel_test = pd.DataFrame(backtest_fisslerziegel_test_data)
+
         df_data = pd.DataFrame(data_data)
         df_es_real = pd.DataFrame(es_real_data)
         df_volatilities = pd.DataFrame(volatilities_data)
@@ -190,6 +237,10 @@ class DataExporter:
         with pd.ExcelWriter(self.output_path, engine='openpyxl') as writer:
             df_backtest_ridge_salida.to_excel(writer, sheet_name='BacktestRidge - Salida', index=False)
             df_backtest_ridge_test.to_excel(writer, sheet_name='BacktestRidge - Test', index=False)
+            df_backtest_multiquantile_salida.to_excel(writer, sheet_name='BacktestMultiquantile - Salida', index=False)
+            df_backtest_multiquantile_test.to_excel(writer, sheet_name='BacktestMultiquantile - Test', index=False)
+            df_backtest_fisslerziegel_salida.to_excel(writer, sheet_name='BacktestFisslerziegel - Salida', index=False)
+            df_backtest_fisslerziegel_test.to_excel(writer, sheet_name='BacktestFisslerziegel - Test', index=False)
             df_data.to_excel(writer, sheet_name='Data', index=False)
             df_es_real.to_excel(writer, sheet_name='ES Real', index=False)
             df_volatilities.to_excel(writer, sheet_name='Volatilities', index=False)

@@ -34,7 +34,7 @@ if __name__ == "__main__":
     forecast_instance.run_forecast()
 
     backtest_manager = BacktestManager(data_dict, forecast_dict, confidence_level)
-    backtest_manager.run_backtest()
+    backtest_manager.run_backtest_rige()
     backtest_dict = backtest_manager.get_backtest_dict()
     print()
     exporter = DataExporter(data_dict, forecast_dict, backtest_dict)
