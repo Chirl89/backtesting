@@ -15,6 +15,7 @@ class MultiQuantileBacktest:
 
         Parameters are identical in nature to those used in the EStestRidge class.
         """
+        self.mean_breach_value = 0
         self.X_obs = X_obs
         self.T = X_obs.size
         self.X = X
@@ -44,6 +45,10 @@ class MultiQuantileBacktest:
         self.VaR_breaches = I_obs.sum()
         self.Z_obs = self.statistic(self.X_obs, I_obs)
 
+        if len(self.X_obs[I_obs]) > 0:
+            self.mean_breach_value = np.mean(self.X_obs[I_obs])
+        else:
+            self.mean_breach_value = 0
         statistics = []
         for _ in range(self.nSim):
             X_i = self.X()
@@ -95,4 +100,4 @@ class MultiQuantileBacktest:
         """
         Outputs key results for further analysis.
         """
-        return self.VaR_breaches, self.Z_obs
+        return self.VaR_breaches, self.mean_breach_value
