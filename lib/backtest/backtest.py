@@ -72,7 +72,8 @@ class BacktestManager:
         predicted_volatility = results['VOLATILITY'].values
 
         backtest_ridge = EStestRidge(real_returns,
-                                     lambda: np.random.normal(loc=0, scale=predicted_volatility, size=len(predicted_volatility)),
+                                     lambda: np.random.normal(loc=0, scale=predicted_volatility,
+                                                              size=len(predicted_volatility)),
                                      1 - self.confidence_level,
                                      var_vol(results, self.confidence_level),
                                      expected_shortfall(results, self.confidence_level),
@@ -81,7 +82,8 @@ class BacktestManager:
 
         self.backtest_dict[index][volatility][horizon][model]['BacktestRidge'] = backtest_ridge
         self.backtest_dict[index][volatility][horizon][model]['BacktestRidge - Salida'] = backtest_ridge.backtest_out()
-        self.backtest_dict[index][volatility][horizon][model]['BacktestRidge - Test'] = backtest_ridge.get_results_summary()
+        self.backtest_dict[index][volatility][horizon][model][
+            'BacktestRidge - Test'] = backtest_ridge.get_results_summary()
 
     def _execute_backtest_multiquantile(self, index, volatility, horizon, model, results):
         """
@@ -91,12 +93,13 @@ class BacktestManager:
         predicted_volatility = results['VOLATILITY'].values
 
         backtest_mq = MultiQuantileBacktest(real_returns,
-                             lambda: np.random.normal(loc=0, scale=predicted_volatility, size=len(predicted_volatility)),
-                             1 - self.confidence_level,
-                             var_vol(results, self.confidence_level),
-                             expected_shortfall(results, self.confidence_level),
-                             1000,
-                             1 - self.confidence_level)
+                                            lambda: np.random.normal(loc=0, scale=predicted_volatility,
+                                                                     size=len(predicted_volatility)),
+                                            1 - self.confidence_level,
+                                            var_vol(results, self.confidence_level),
+                                            expected_shortfall(results, self.confidence_level),
+                                            1000,
+                                            1 - self.confidence_level)
 
         self.backtest_dict[index][volatility][horizon][model]['BacktestMQ'] = backtest_mq
         self.backtest_dict[index][volatility][horizon][model]['BacktestMQ - Salida'] = backtest_mq.backtest_out()
@@ -110,12 +113,14 @@ class BacktestManager:
         predicted_volatility = results['VOLATILITY'].values
 
         backtest_fz = FisslerZiegelBacktest(real_returns,
-                             lambda: np.random.normal(loc=0, scale=predicted_volatility, size=len(predicted_volatility)),
-                             1 - self.confidence_level,
-                             var_vol(results, self.confidence_level),
-                             expected_shortfall(results, self.confidence_level),
-                             1000,
-                             1 - self.confidence_level)
+                                            lambda: np.random.normal(
+                                                loc=0, scale=predicted_volatility,
+                                                size=len(predicted_volatility)),
+                                            1 - self.confidence_level,
+                                            var_vol(results, self.confidence_level),
+                                            expected_shortfall(results, self.confidence_level),
+                                            1000,
+                                            1 - self.confidence_level)
 
         self.backtest_dict[index][volatility][horizon][model]['BacktestFZ'] = backtest_fz
         self.backtest_dict[index][volatility][horizon][model]['BacktestFZ - Salida'] = backtest_fz.backtest_out()

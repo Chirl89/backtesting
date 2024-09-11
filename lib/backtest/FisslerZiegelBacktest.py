@@ -13,7 +13,7 @@ class FisslerZiegelBacktest:
     def __init__(self, X_obs, X, VaRLevel, VaR, ES, nSim, alpha):
         """
         Initialize the FisslerZiegelBacktest class with inputs similar to previous classes.
-
+º
         Parameters:
         - X_obs (np.array): Array of observed portfolio returns.
         - X (function): Function that simulates portfolio returns under H0.

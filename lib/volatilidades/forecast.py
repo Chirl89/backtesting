@@ -11,7 +11,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.ensemble import RandomForestRegressor
 from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import LSTM, Dense, Input, Activation
+from tensorflow.keras.layers import LSTM, Dense, Input, Activation, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 import joblib
 from tensorflow.keras.backend import clear_session
@@ -88,13 +88,16 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     # Entrenamiento del modelo
     modelo = Sequential()
     modelo.add(Input(shape=(X.shape[1], 1)))
-    modelo.add(LSTM(units=20))
+    modelo.add(LSTM(units=50, return_sequences=True))  # Capa LSTM con 50 neuronas
+    modelo.add(Dropout(0.2))  # Añadir Dropout del 20%
+    modelo.add(LSTM(units=50))  # Segunda capa LSTM con 50 neuronas
+    modelo.add(Dropout(0.2))  # Añadir Dropout del 20%
     modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
 
-    early_stopping = EarlyStopping(monitor='loss', patience=2, restore_best_weights=True)
-    modelo.fit(X, Y, epochs=10, batch_size=32, verbose=0, callbacks=[early_stopping])
+    early_stopping = EarlyStopping(monitor='loss', patience=3, restore_best_weights=True)
+    modelo.fit(X, Y, epochs=50, batch_size=32, verbose=0, callbacks=[early_stopping])
 
     # Guardar el modelo y el scaler
     modelo.save(model_path)

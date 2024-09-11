@@ -7,11 +7,11 @@ from lib.backtest.backtest import BacktestManager
 
 indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 input_method = 'yf'
-start_get_data = '2021-07-30'
-end_get_data = '2024-07-30'
-start_calculation_date = '2023-07-30'
-end_calculation_date = '2024-07-30'
-confidence_level = 0.975
+start_get_data = '2021-09-10'
+end_get_data = '2024-09-10'
+start_calculation_date = '2023-09-10'
+end_calculation_date = '2024-09-10'
+confidence_level = 0.99
 horizons = [1, 10]
 
 start_time = time.time()
@@ -35,6 +35,8 @@ if __name__ == "__main__":
 
     backtest_manager = BacktestManager(data_dict, forecast_dict, confidence_level)
     backtest_manager.run_backtest_multiquantile()
+    backtest_manager.run_backtest_rige()
+    backtest_manager.run_backtest_fisslerziegel()
     backtest_dict = backtest_manager.get_backtest_dict()
     print()
     exporter = DataExporter(data_dict, forecast_dict, backtest_dict)
