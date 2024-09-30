@@ -34,6 +34,7 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), rand
 
     # Entrenamiento del modelo
     mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes,
+                       activation='tanh',
                        random_state=random_state,
                        max_iter=max_iter,
                        learning_rate_init=learning_rate_init,
@@ -88,6 +89,7 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     # Entrenamiento del modelo
     modelo = Sequential()
     modelo.add(Input(shape=(X.shape[1], 1)))
+
     modelo.add(LSTM(units=50, return_sequences=True))  # Capa LSTM con 50 neuronas
     modelo.add(Dropout(0.2))  # Añadir Dropout del 20%
     modelo.add(LSTM(units=50))  # Segunda capa LSTM con 50 neuronas
@@ -135,7 +137,7 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
 
 # 3. Random Forest
 
-def random_forest_train(vol, model_path, horizon, n_estimators=15, random_state=42, window_size=60):
+def random_forest_train(vol, model_path, horizon, n_estimators=50, random_state=42, window_size=60):
     # Definir la ruta del scaler
     scaler_path = model_path.replace('.pkl', '_scaler.pkl')
 

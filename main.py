@@ -7,10 +7,10 @@ from lib.backtest.backtest import BacktestManager
 
 indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 input_method = 'yf'
-start_get_data = '2021-09-10'
-end_get_data = '2024-09-10'
-start_calculation_date = '2023-09-10'
-end_calculation_date = '2024-09-10'
+start_get_data = '2021-09-17'
+end_get_data = '2024-09-17'
+start_calculation_date = '2023-09-17'
+end_calculation_date = '2024-09-17'
 confidence_level = 0.99
 horizons = [1, 10]
 
