@@ -4,8 +4,11 @@ import tensorflow as tf
 
 # Suprimir advertencias de TensorFlow
 tf.get_logger().setLevel(logging.ERROR)
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+import math
 import gc
+import joblib
 import numpy as np
 from sklearn.neural_network import MLPRegressor
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -13,8 +16,19 @@ from sklearn.ensemble import RandomForestRegressor
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import LSTM, Dense, Input, Activation, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
-import joblib
 from tensorflow.keras.backend import clear_session
+
+
+def calculate_aic_bic(n_params, residuals, n_samples):
+    # Log likelihood
+    residual_sum_of_squares = sum(residuals ** 2)
+    log_likelihood = -0.5 * n_samples * math.log(residual_sum_of_squares / n_samples)
+
+    # AIC and BIC
+    aic = 2 * n_params - 2 * log_likelihood
+    bic = math.log(n_samples) * n_params - 2 * log_likelihood
+
+    return aic, bic
 
 
 # 1. Perceptron
@@ -29,8 +43,7 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), rand
     volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
     X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in
                   range(len(volatilities_scaled) - window_size - horizon + 1)])
-    y = volatilities_scaled[
-               window_size + horizon - 1: len(volatilities_scaled)].flatten()  # Predecir log-volatilidades
+    y = volatilities_scaled[window_size + horizon - 1: len(volatilities_scaled)].flatten()
 
     # Entrenamiento del modelo
     mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes,
@@ -40,11 +53,21 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), rand
                        learning_rate_init=learning_rate_init,
                        alpha=0.001,  # Regularización L2
                        early_stopping=True,
-                       verbose=0)
+                       verbose=0)  # verbose=0 para suprimir durante el entrenamiento
     mlp.fit(X, y)
 
-    # Guardar el modelo y el scaler
-    joblib.dump(mlp, model_path)
+    # Número de parámetros del modelo
+    n_params = sum([coef.size for coef in mlp.coefs_])
+
+    # Cálculo de residuales
+    y_pred = mlp.predict(X)
+    residuals = y - y_pred
+
+    # Calcular AIC y BIC (valores únicos)
+    aic, bic = calculate_aic_bic(n_params, residuals, len(y))
+
+    # Guardar el modelo, el scaler, y las métricas AIC/BIC como valores únicos
+    joblib.dump((mlp, aic, bic), model_path)
     joblib.dump(scaler, scaler_path)
 
     # Liberar memoria
@@ -56,7 +79,7 @@ def perceptron_forecast(vol, model, scaler, horizon, window_size=60):
     # Preprocesamiento de los datos
     volatilities_scaled = scaler.transform(vol.values.reshape(-1, 1))
     last_window = volatilities_scaled[-window_size:].flatten().reshape(1, -1)
-    predicted_volatility = model.predict(last_window)  # Convertir log-volatilidad a volatilidad
+    predicted_volatility = model.predict(last_window)
 
     # Invertir la escala de la predicción
     predicted_volatility = scaler.inverse_transform(predicted_volatility.reshape(-1, 1)).flatten()[0]
@@ -90,10 +113,10 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     modelo = Sequential()
     modelo.add(Input(shape=(X.shape[1], 1)))
 
-    modelo.add(LSTM(units=50, return_sequences=True))  # Capa LSTM con 50 neuronas
-    modelo.add(Dropout(0.2))  # Añadir Dropout del 20%
-    modelo.add(LSTM(units=50))  # Segunda capa LSTM con 50 neuronas
-    modelo.add(Dropout(0.2))  # Añadir Dropout del 20%
+    modelo.add(LSTM(units=50, return_sequences=True))
+    modelo.add(Dropout(0.2))
+    modelo.add(LSTM(units=50))
+    modelo.add(Dropout(0.2))
     modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
@@ -101,17 +124,26 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     early_stopping = EarlyStopping(monitor='loss', patience=3, restore_best_weights=True)
     modelo.fit(X, Y, epochs=50, batch_size=32, verbose=0, callbacks=[early_stopping])
 
-    # Guardar el modelo y el scaler
+    # Obtener predicciones para los datos de entrenamiento
+    Y_pred = modelo.predict(X)
+
+    # Cálculo de los residuales
+    residuals = Y - Y_pred.flatten()
+
+    # Número de parámetros (pesos) del modelo
+    n_params = modelo.count_params()
+
+    # Calcular AIC y BIC como valores únicos
+    aic, bic = calculate_aic_bic(n_params, residuals, len(Y))
+
+    # Guardar el modelo, el scaler, y las métricas AIC/BIC
     modelo.save(model_path)
     joblib.dump(sc, scaler_path)
+    joblib.dump((aic, bic), model_path.replace('.keras', '_metrics.pkl'))
 
     # Liberar memoria
     del X, Y, set_entrenamiento_escalado
     gc.collect()
-
-
-def predict(model, data):
-    return model(data, training=False)
 
 
 def lstm_forecast(vol, model, scaler, horizon, time_step=60):
@@ -125,7 +157,7 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
     clear_session()
 
     # Predicción
-    prediccion_dia_horizon = predict(model, ultimo_bloque)
+    prediccion_dia_horizon = model.predict(ultimo_bloque)
     prediccion_dia_horizon = scaler.inverse_transform(prediccion_dia_horizon)
 
     # Liberar memoria
@@ -152,8 +184,18 @@ def random_forest_train(vol, model_path, horizon, n_estimators=50, random_state=
     rf = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state, n_jobs=-1, verbose=0)
     rf.fit(X, y)
 
-    # Guardar el modelo y el scaler
-    joblib.dump(rf, model_path)
+    # Cálculo de los residuales
+    y_pred = rf.predict(X)
+    residuals = y - y_pred
+
+    # Número de parámetros (estimado): n_estimators * características
+    n_params = n_estimators * X.shape[1]
+
+    # Calcular AIC y BIC como valores únicos
+    aic, bic = calculate_aic_bic(n_params, residuals, len(y))
+
+    # Guardar el modelo, el scaler, y las métricas AIC/BIC
+    joblib.dump((rf, aic, bic), model_path)
     joblib.dump(scaler, scaler_path)
 
     # Liberar memoria

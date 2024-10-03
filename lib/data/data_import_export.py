@@ -1,6 +1,7 @@
+import os
 import pandas as pd
 import yfinance as yf
-
+import joblib
 
 class DataImporter:
     def __init__(self, indexes, get_data_begin, get_data_end, method, csv_path=None):
@@ -64,10 +65,6 @@ class DataImporter:
         return self.data
 
 
-import os
-import pandas as pd
-
-
 class DataExporter:
     def __init__(self, index_dict, forecast_dict, backtest_dict, output_dir='output'):
         """
@@ -99,6 +96,7 @@ class DataExporter:
         volatilities_data = []
         data_data = []
         forecast_data = []
+        aic_bic_data = []  # Nueva lista para almacenar las métricas AIC/BIC
 
         # Iterar sobre backtest_dict y estructurar los datos
         for index, volatilities in self.backtest_dict.items():
@@ -153,7 +151,7 @@ class DataExporter:
                             'Volatility': volatility,
                             'Horizon': horizon,
                             'Model': model,
-                            'BacktestRidge - Test': results.get('BacktestMQ - Test', '')
+                            'BacktestMQ - Test': results.get('BacktestMQ - Test', '')
                         })
 
                         # Agregar datos a la lista para la pestaña BacktestRidge - Test
@@ -163,6 +161,23 @@ class DataExporter:
                             'Horizon': horizon,
                             'Model': model,
                             'BacktestRidge - Test': results.get('BacktestFZ - Test', '')
+                        })
+
+        # Iterar sobre forecast_dict para capturar AIC/BIC
+        for index, volatilities in self.forecast_dict.items():
+            for volatility, horizons in volatilities.items():
+                for horizon, models in horizons.items():
+                    for model_name, forecast_df in models.items():
+                        # Tomar el AIC y BIC únicos, no las series
+                        aic = forecast_df['AIC'].iloc[0] if isinstance(forecast_df['AIC'], pd.Series) else forecast_df['AIC']
+                        bic = forecast_df['BIC'].iloc[0] if isinstance(forecast_df['BIC'], pd.Series) else forecast_df['BIC']
+                        aic_bic_data.append({
+                            'Index': index,
+                            'Volatility': volatility,
+                            'Horizon': horizon,
+                            'Model': model_name,
+                            'AIC': aic,
+                            'BIC': bic
                         })
 
         # Iterar sobre index_dict para crear los datos adicionales
@@ -202,20 +217,6 @@ class DataExporter:
                         row_data = row.to_dict()
                         volatilities_data.append(row_data)
 
-        # Iterar sobre forecast_dict para estructurar los datos
-        for index, volatilities in self.forecast_dict.items():
-            for volatility, horizons in volatilities.items():
-                for horizon, models in horizons.items():
-                    for model_name, forecast_df in models.items():
-                        forecast_df_reset = forecast_df.reset_index()  # Convertir el índice en columna
-                        for _, row in forecast_df_reset.iterrows():
-                            row_data = row.to_dict()
-                            row_data['Index'] = index
-                            row_data['Volatility'] = volatility
-                            row_data['Horizon'] = horizon
-                            row_data['Model'] = model_name
-                            forecast_data.append(row_data)
-
         # Convertir las listas en DataFrames
         df_backtest_ridge_salida = pd.DataFrame(backtest_ridge_salida_data)
         df_backtest_ridge_test = pd.DataFrame(backtest_ridge_test_data)
@@ -223,11 +224,11 @@ class DataExporter:
         df_backtest_multiquantile_test = pd.DataFrame(backtest_multiquantile_test_data)
         df_backtest_fisslerziegel_salida = pd.DataFrame(backtest_fisslerziegel_salida_data)
         df_backtest_fisslerziegel_test = pd.DataFrame(backtest_fisslerziegel_test_data)
-
         df_data = pd.DataFrame(data_data)
         df_es_real = pd.DataFrame(es_real_data)
         df_volatilities = pd.DataFrame(volatilities_data)
         df_forecast = pd.DataFrame(forecast_data)
+        df_aic_bic = pd.DataFrame(aic_bic_data)  # Nuevo DataFrame para AIC/BIC
 
         # Crear el directorio si no existe
         if not os.path.exists(self.output_dir):
@@ -244,6 +245,7 @@ class DataExporter:
             df_data.to_excel(writer, sheet_name='Data', index=False)
             df_es_real.to_excel(writer, sheet_name='ES Real', index=False)
             df_volatilities.to_excel(writer, sheet_name='Volatilities', index=False)
-            df_forecast.to_excel(writer, sheet_name='Forecast', index=False)  # Nueva pestaña para forecast_dict
+            df_forecast.to_excel(writer, sheet_name='Forecast', index=False)
+            df_aic_bic.to_excel(writer, sheet_name='AIC_BIC', index=False)  # Nueva pestaña para AIC/BIC
 
         print(f"El archivo se ha guardado en: {self.output_path}")

@@ -30,7 +30,7 @@ class Forecast:
         with lock:
             if not os.path.exists(perceptron_model_name):
                 perceptron_train(vol[:start_date], perceptron_model_name, horizon)
-            mlp_model = joblib.load(perceptron_model_name)
+            mlp_model, aic, bic = joblib.load(perceptron_model_name)
             scaler = joblib.load(scaler_path)
 
         for date in vol_range.index:
@@ -42,6 +42,10 @@ class Forecast:
 
             del forecast_data, vol_date
             gc.collect()
+
+        # Solo guardamos los valores únicos de AIC y BIC
+        forecast['AIC'] = aic
+        forecast['BIC'] = bic
 
         forecast_df = pd.DataFrame(forecast, index=vol_range.index).dropna()
         del forecast, vol_range
@@ -61,6 +65,7 @@ class Forecast:
                 lstm_train(vol[:start_date], lstm_model_path, horizon)
             lstm_model = load_model(lstm_model_path)
             scaler = joblib.load(lstm_model_path.replace('.keras', '_scaler.pkl'))
+            aic, bic = joblib.load(lstm_model_path.replace('.keras', '_metrics.pkl'))
 
         for date in vol_range.index:
             vol_date = vol[:date]
@@ -72,13 +77,16 @@ class Forecast:
             del forecast_data, vol_date
             gc.collect()
 
+        # Solo guardamos los valores únicos de AIC y BIC
+        forecast['AIC'] = aic
+        forecast['BIC'] = bic
+
         forecast_df = pd.DataFrame(forecast, index=vol_range.index).dropna()
         del forecast, vol_range
         gc.collect()
         return forecast_df
 
-    @staticmethod
-    def roll_random_forest_forecast(vol, start_date, end_date, horizon, index, volatility, global_counter, lock,
+    def roll_random_forest_forecast(self, vol, start_date, end_date, horizon, index, volatility, global_counter, lock,
                                     total_tasks):
         forecast = {'VOLATILITY': []}
         vol_range = vol[start_date:end_date]
@@ -90,7 +98,7 @@ class Forecast:
         with lock:
             if not os.path.exists(rf_model_name):
                 random_forest_train(vol[:start_date], rf_model_name, horizon)
-            rf_model = joblib.load(rf_model_name)
+            rf_model, aic, bic = joblib.load(rf_model_name)
             scaler = joblib.load(scaler_path)
 
         for date in vol_range.index:
@@ -102,6 +110,10 @@ class Forecast:
 
             del forecast_data, vol_date
             gc.collect()
+
+        # Solo guardamos los valores únicos de AIC y BIC
+        forecast['AIC'] = aic
+        forecast['BIC'] = bic
 
         forecast_df = pd.DataFrame(forecast, index=vol_range.index).dropna()
         del forecast, vol_range
@@ -146,7 +158,7 @@ class Forecast:
         return results
 
     def clean_up_models(self):
-        # Eliminar todos los modelos y escaladores generados
+        # Eliminar todos los modelos, escaladores y métricas generados
         for index in self.index_dict:
             for vol in self.index_dict[index]['Volatilities']:
                 for horizon in self.horizons:
@@ -155,14 +167,22 @@ class Forecast:
                     lstm_model_path = f'lib/volatilidades/models/lstm_{index}_{vol}_{horizon}.keras'
                     rf_model_name = f'lib/volatilidades/models/random_forest_{index}_{vol}_{horizon}.pkl'
 
-                    # Definir los nombres de los escaladores
+                    # Definir los nombres de los escaladores y métricas
                     perceptron_scaler_path = perceptron_model_name.replace('.pkl', '_scaler.pkl')
                     lstm_scaler_path = lstm_model_path.replace('.keras', '_scaler.pkl')
                     rf_scaler_path = rf_model_name.replace('.pkl', '_scaler.pkl')
 
+                    # Archivos de métricas AIC/BIC (_metrics.pkl)
+                    lstm_metrics_path = lstm_model_path.replace('.keras', '_metrics.pkl')
+                    perceptron_metrics_path = perceptron_model_name.replace('.pkl', '_metrics.pkl')
+                    rf_metrics_path = rf_model_name.replace('.pkl', '_metrics.pkl')
+
                     # Borrar los archivos si existen
-                    for file_path in [perceptron_model_name, perceptron_scaler_path, lstm_model_path, lstm_scaler_path,
-                                      rf_model_name, rf_scaler_path]:
+                    for file_path in [
+                        perceptron_model_name, perceptron_scaler_path, perceptron_metrics_path,
+                        lstm_model_path, lstm_scaler_path, lstm_metrics_path,
+                        rf_model_name, rf_scaler_path, rf_metrics_path
+                    ]:
                         if os.path.exists(file_path):
                             os.remove(file_path)
 
@@ -211,4 +231,3 @@ class Forecast:
                 self.forecast_dict[index] = deepcopy(forecast_dict_aux)
                 del forecast_dict_aux
                 gc.collect()
-
