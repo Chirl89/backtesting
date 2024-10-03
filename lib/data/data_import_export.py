@@ -82,7 +82,7 @@ class DataExporter:
         self.forecast_dict = forecast_dict
         self.backtest_dict = backtest_dict
         self.output_dir = output_dir
-        self.output_path = os.path.join(output_dir, 'backtest_results_tanh_RF_50.xlsx')
+        self.output_path = os.path.join(output_dir, 'backtest_results.xlsx')
 
     def export_to_excel(self):
         """

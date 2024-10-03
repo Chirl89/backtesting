@@ -1,16 +1,16 @@
 import time
 from lib.dicts.index import Index
-from lib.data.data import DataImporter, DataExporter
+from lib.data.data_import_export import DataImporter, DataExporter
 from lib.data.data_parser import ProcessData
-from lib.forecast.forecast import *
+from lib.forecast.roll_forecast import *
 from lib.backtest.backtest import BacktestManager
 
-indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+indexes = ['SAN.MC', 'BBVA.MC']#, 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 input_method = 'yf'
 start_get_data = '2021-09-17'
 end_get_data = '2024-09-17'
 start_calculation_date = '2023-09-17'
-end_calculation_date = '2024-09-17'
+end_calculation_date = '2023-09-20'
 confidence_level = 0.99
 horizons = [1, 10]
 
