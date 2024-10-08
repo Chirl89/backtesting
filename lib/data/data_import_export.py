@@ -168,17 +168,32 @@ class DataExporter:
             for volatility, horizons in volatilities.items():
                 for horizon, models in horizons.items():
                     for model_name, forecast_df in models.items():
-                        # Tomar el AIC y BIC únicos, no las series
-                        aic = forecast_df['AIC'].iloc[0] if isinstance(forecast_df['AIC'], pd.Series) else forecast_df['AIC']
-                        bic = forecast_df['BIC'].iloc[0] if isinstance(forecast_df['BIC'], pd.Series) else forecast_df['BIC']
-                        aic_bic_data.append({
-                            'Index': index,
-                            'Volatility': volatility,
-                            'Horizon': horizon,
-                            'Model': model_name,
-                            'AIC': aic,
-                            'BIC': bic
-                        })
+                        # Verificamos que el DataFrame no esté vacío
+                        if not forecast_df.empty:
+                            # Extraemos el valor de la volatilidad (promedio o último valor) y AIC/BIC (primer valor)
+                            aic_value = forecast_df['AIC'].iloc[0]  # El primer valor ya que no cambia
+                            bic_value = forecast_df['BIC'].iloc[0]  # El primer valor ya que no cambia
+                            aic_bic_data.append({
+                                'Index': index,
+                                'Volatility': volatility,
+                                'Horizon': horizon,
+                                'Model': model_name,
+                                'AIC': aic_value,
+                                'BIC': bic_value
+                            })
+        for index, volatilities in self.forecast_dict.items():
+            for volatility, horizons in volatilities.items():
+                for horizon, models in horizons.items():
+                    for model_name, forecast_df in models.items():
+                        forecast_df_reset = forecast_df.reset_index()  # Convertir el índice en columna
+                        for _, row in forecast_df_reset.iterrows():
+                            row_data = row.to_dict()
+                            row_data['Index'] = index
+                            row_data['Volatility'] = volatility
+                            row_data['Horizon'] = horizon
+                            row_data['Model'] = model_name
+                            forecast_data.append(row_data)
+
 
         # Iterar sobre index_dict para crear los datos adicionales
         for index, content in self.index_dict.items():
