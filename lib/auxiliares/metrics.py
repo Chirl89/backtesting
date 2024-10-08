@@ -17,7 +17,7 @@ def calculate_rmse(real, predicted):
 
 
 def calculate_mape(real, predicted):
-    return np.mean(np.abs((real - predicted) / real)) * 100
+    return np.mean(np.abs((real - predicted) / real))
 
 
 def calculate_metrics(forecast_dict, index_dict, output_dir='output'):
