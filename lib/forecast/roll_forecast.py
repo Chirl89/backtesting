@@ -1,4 +1,5 @@
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import sys
 import pandas as pd
@@ -227,6 +228,80 @@ class Forecast:
                                 gc.collect()
                             except Exception as exc:
                                 print(f'Error en la predicción para horizon {horizon}: {exc}')
+
+                self.forecast_dict[index] = deepcopy(forecast_dict_aux)
+                del forecast_dict_aux
+                gc.collect()
+
+    def roll_single_forecast(self, vol, start_calculation_date, end_calculation_date, horizon, index, volatility,
+                             global_counter, lock, total_tasks, method):
+        """
+        Ejecuta el forecasting para un solo método de predicción (perceptron, lstm o random_forest).
+        """
+        results = {}
+        try:
+            if method == 'perceptron':
+                # Ejecutar sólo Perceptron
+                results['PERCEPTRON'] = self.roll_perceptron_forecast(vol, start_calculation_date,
+                                                                      end_calculation_date,
+                                                                      horizon, index, volatility, global_counter,
+                                                                      lock,
+                                                                      total_tasks)
+            elif method == 'lstm':
+                # Ejecutar sólo LSTM
+                results['LSTM'] = self.roll_lstm_forecast(vol, start_calculation_date, end_calculation_date,
+                                                          horizon, index, volatility, global_counter, lock,
+                                                          total_tasks)
+            elif method == 'random_forest':
+                # Ejecutar sólo Random Forest
+                results['RANDOM_FOREST'] = self.roll_random_forest_forecast(vol, start_calculation_date,
+                                                                            end_calculation_date,
+                                                                            horizon, index, volatility,
+                                                                            global_counter, lock,
+                                                                            total_tasks)
+            else:
+                print(f"Método {method} no reconocido.")
+                return
+
+            # Actualización del progreso
+            with lock:
+                global_counter.value += 1
+            progress = (global_counter.value / total_tasks) * 100
+            sys.stdout.write(f'\rProgreso global forecasting: {progress:.2f}%')
+            sys.stdout.flush()
+
+        except Exception as e:
+            print(f"Error en la predicción: {e}")
+
+        finally:
+            gc.collect()
+        return results
+
+    def run_single_forecast(self, method='random_forest'):
+        total_indices = len(self.index_dict)
+        total_volatilities = sum(len(v['Volatilities']) for v in self.index_dict.values())
+        total_tasks = total_indices * total_volatilities  # Solo un método de predicción
+
+        with Manager() as manager:
+            global_counter = manager.Value('i', 0)
+            lock = manager.Lock()
+
+            task_counter = 0
+
+            for idx_index, (index, data) in enumerate(self.index_dict.items(), 1):
+                forecast_dict_aux = {}
+                num_volatilities = len(data['Volatilities'])
+
+                for idx_vol, (vol, vol_data) in enumerate(data['Volatilities'].items(), 1):
+                    forecast_dict_aux[vol] = {}
+
+                    for horizon in self.horizons:
+                        forecast_dict_aux[vol][horizon] = self.roll_single_forecast(vol_data,
+                                                                                    self.start_calculation_date,
+                                                                                    self.end_calculation_date,
+                                                                                    horizon, index, vol,
+                                                                                    global_counter, lock,
+                                                                                    total_tasks, method=method)
 
                 self.forecast_dict[index] = deepcopy(forecast_dict_aux)
                 del forecast_dict_aux

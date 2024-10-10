@@ -33,7 +33,7 @@ def calculate_aic_bic(n_params, residuals, n_samples):
 
 # 1. Perceptron
 
-def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), random_state=42, max_iter=5000,
+def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(100, 50, 30), random_state=42, max_iter=5000,
                      learning_rate_init=0.001, window_size=60):
     # Definir la ruta del scaler
     scaler_path = model_path.replace('.pkl', '_scaler.pkl')
@@ -47,7 +47,7 @@ def perceptron_train(vol, model_path, horizon, hidden_layer_sizes=(50, 30), rand
 
     # Entrenamiento del modelo
     mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes,
-                       activation='tanh',
+                       #activation='tanh',
                        random_state=random_state,
                        max_iter=max_iter,
                        learning_rate_init=learning_rate_init,
@@ -115,8 +115,11 @@ def lstm_train(vol, model_path, horizon, time_step=60):
 
     modelo.add(LSTM(units=50, return_sequences=True))
     modelo.add(Dropout(0.2))
+    modelo.add(LSTM(units=50, return_sequences=True))
+    modelo.add(Dropout(0.2))
     modelo.add(LSTM(units=50))
     modelo.add(Dropout(0.2))
+
     modelo.add(Dense(units=1))
     modelo.add(Activation('relu'))
     modelo.compile(optimizer='adam', loss='mse')
@@ -125,7 +128,7 @@ def lstm_train(vol, model_path, horizon, time_step=60):
     modelo.fit(X, Y, epochs=50, batch_size=32, verbose=0, callbacks=[early_stopping])
 
     # Obtener predicciones para los datos de entrenamiento
-    Y_pred = modelo.predict(X)
+    Y_pred = modelo.predict(X, verbose=0)
 
     # Cálculo de los residuales
     residuals = Y - Y_pred.flatten()
@@ -157,7 +160,7 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
     clear_session()
 
     # Predicción
-    prediccion_dia_horizon = model.predict(ultimo_bloque)
+    prediccion_dia_horizon = model.predict(ultimo_bloque, verbose=0)
     prediccion_dia_horizon = scaler.inverse_transform(prediccion_dia_horizon)
 
     # Liberar memoria
