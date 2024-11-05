@@ -63,7 +63,7 @@ class Forecast:
 
         with lock:
             if not os.path.exists(lstm_model_path):
-                lstm_train(vol[:start_date], lstm_model_path, horizon)
+                lstm_train(vol[:start_date], lstm_model_path, horizon, index, volatility)
             lstm_model = load_model(lstm_model_path)
             scaler = joblib.load(lstm_model_path.replace('.keras', '_scaler.pkl'))
             aic, bic = joblib.load(lstm_model_path.replace('.keras', '_metrics.pkl'))
@@ -98,7 +98,7 @@ class Forecast:
 
         with lock:
             if not os.path.exists(rf_model_name):
-                random_forest_train(vol[:start_date], rf_model_name, horizon)
+                random_forest_train(vol[:start_date], rf_model_name, horizon, index, volatility)
             rf_model, aic, bic = joblib.load(rf_model_name)
             scaler = joblib.load(scaler_path)
 

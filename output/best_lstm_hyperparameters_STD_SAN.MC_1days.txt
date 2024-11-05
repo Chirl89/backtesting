@@ -1,0 +1,53 @@
+Mejores Hiperparámetros para LSTM:
+Parámetros: {'units': 200, 'dropout_rate': 0.2, 'epochs': 100}
+Error Cuadrático Medio (MSE) de la mejor combinación: 0.0021
+
+Resultados de cada combinación de hiperparámetros:
+Parámetros: units=50.0, dropout_rate=0.2, epochs=50.0, MSE: 0.0039
+Parámetros: units=50.0, dropout_rate=0.2, epochs=100.0, MSE: 0.0039
+Parámetros: units=50.0, dropout_rate=0.2, epochs=200.0, MSE: 0.0040
+Parámetros: units=50.0, dropout_rate=0.3, epochs=50.0, MSE: 0.0053
+Parámetros: units=50.0, dropout_rate=0.3, epochs=100.0, MSE: 0.0056
+Parámetros: units=50.0, dropout_rate=0.3, epochs=200.0, MSE: 0.0057
+Parámetros: units=50.0, dropout_rate=0.4, epochs=50.0, MSE: 0.0053
+Parámetros: units=50.0, dropout_rate=0.4, epochs=100.0, MSE: 0.0043
+Parámetros: units=50.0, dropout_rate=0.4, epochs=200.0, MSE: 0.0054
+Parámetros: units=50.0, dropout_rate=0.5, epochs=50.0, MSE: 0.0045
+Parámetros: units=50.0, dropout_rate=0.5, epochs=100.0, MSE: 0.0049
+Parámetros: units=50.0, dropout_rate=0.5, epochs=200.0, MSE: 0.0058
+Parámetros: units=100.0, dropout_rate=0.2, epochs=50.0, MSE: 0.0033
+Parámetros: units=100.0, dropout_rate=0.2, epochs=100.0, MSE: 0.1670
+Parámetros: units=100.0, dropout_rate=0.2, epochs=200.0, MSE: 0.0030
+Parámetros: units=100.0, dropout_rate=0.3, epochs=50.0, MSE: 0.0035
+Parámetros: units=100.0, dropout_rate=0.3, epochs=100.0, MSE: 0.0031
+Parámetros: units=100.0, dropout_rate=0.3, epochs=200.0, MSE: 0.0033
+Parámetros: units=100.0, dropout_rate=0.4, epochs=50.0, MSE: 0.0037
+Parámetros: units=100.0, dropout_rate=0.4, epochs=100.0, MSE: 0.0030
+Parámetros: units=100.0, dropout_rate=0.4, epochs=200.0, MSE: 0.0029
+Parámetros: units=100.0, dropout_rate=0.5, epochs=50.0, MSE: 0.0040
+Parámetros: units=100.0, dropout_rate=0.5, epochs=100.0, MSE: 0.0035
+Parámetros: units=100.0, dropout_rate=0.5, epochs=200.0, MSE: 0.0030
+Parámetros: units=150.0, dropout_rate=0.2, epochs=50.0, MSE: 0.0028
+Parámetros: units=150.0, dropout_rate=0.2, epochs=100.0, MSE: 0.0564
+Parámetros: units=150.0, dropout_rate=0.2, epochs=200.0, MSE: 0.0170
+Parámetros: units=150.0, dropout_rate=0.3, epochs=50.0, MSE: 0.0028
+Parámetros: units=150.0, dropout_rate=0.3, epochs=100.0, MSE: 0.0028
+Parámetros: units=150.0, dropout_rate=0.3, epochs=200.0, MSE: 0.0025
+Parámetros: units=150.0, dropout_rate=0.4, epochs=50.0, MSE: 0.0031
+Parámetros: units=150.0, dropout_rate=0.4, epochs=100.0, MSE: 0.0033
+Parámetros: units=150.0, dropout_rate=0.4, epochs=200.0, MSE: 0.0029
+Parámetros: units=150.0, dropout_rate=0.5, epochs=50.0, MSE: 0.0039
+Parámetros: units=150.0, dropout_rate=0.5, epochs=100.0, MSE: 0.0038
+Parámetros: units=150.0, dropout_rate=0.5, epochs=200.0, MSE: 0.0027
+Parámetros: units=200.0, dropout_rate=0.2, epochs=50.0, MSE: 0.0025
+Parámetros: units=200.0, dropout_rate=0.2, epochs=100.0, MSE: 0.0021
+Parámetros: units=200.0, dropout_rate=0.2, epochs=200.0, MSE: 0.0026
+Parámetros: units=200.0, dropout_rate=0.3, epochs=50.0, MSE: 0.0022
+Parámetros: units=200.0, dropout_rate=0.3, epochs=100.0, MSE: 0.0031
+Parámetros: units=200.0, dropout_rate=0.3, epochs=200.0, MSE: 0.0027
+Parámetros: units=200.0, dropout_rate=0.4, epochs=50.0, MSE: 0.0030
+Parámetros: units=200.0, dropout_rate=0.4, epochs=100.0, MSE: 0.0030
+Parámetros: units=200.0, dropout_rate=0.4, epochs=200.0, MSE: 0.0025
+Parámetros: units=200.0, dropout_rate=0.5, epochs=50.0, MSE: 0.0030
+Parámetros: units=200.0, dropout_rate=0.5, epochs=100.0, MSE: 0.0032
+Parámetros: units=200.0, dropout_rate=0.5, epochs=200.0, MSE: 0.0027
