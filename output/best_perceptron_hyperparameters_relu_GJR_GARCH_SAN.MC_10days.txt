@@ -1,0 +1,53 @@
+Mejores Hiperparámetros para Perceptron:
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}
+Error Cuadrático Medio (MSE) de la mejor combinación: 0.0105
+
+Resultados de cada combinación de hiperparámetros:
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0333
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}, MSE: 0.0208
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}, MSE: 0.0105
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0306
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}, MSE: 0.0159
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}, MSE: 0.0112
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0283
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0160
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0114
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0282
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0141
+Parámetros: {'alpha': 1e-05, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0158
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0333
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}, MSE: 0.0210
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}, MSE: 0.0107
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0306
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}, MSE: 0.0161
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}, MSE: 0.0129
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0283
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0156
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0156
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0282
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0140
+Parámetros: {'alpha': 0.0001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0178
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0333
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}, MSE: 0.0207
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}, MSE: 0.0108
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0306
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}, MSE: 0.0162
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}, MSE: 0.0114
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0283
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0153
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0150
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0282
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0136
+Parámetros: {'alpha': 0.001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0176
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0333
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}, MSE: 0.0209
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}, MSE: 0.0116
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}, MSE: 0.0305
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}, MSE: 0.0158
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}, MSE: 0.0127
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0283
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0145
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0153
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}, MSE: 0.0277
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}, MSE: 0.0131
+Parámetros: {'alpha': 0.01, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}, MSE: 0.0131

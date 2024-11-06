@@ -1,0 +1,49 @@
+params,mean_test_score
+"{'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}",0.018013536077886978
+"{'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}",0.0096484764696368
+"{'alpha': 1e-05, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}",0.006923772781281125
+"{'alpha': 1e-05, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}",0.016765184681484257
+"{'alpha': 1e-05, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}",0.008066978142305763
+"{'alpha': 1e-05, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}",0.007228591480858783
+"{'alpha': 1e-05, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}",0.013020118844351197
+"{'alpha': 1e-05, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}",0.007841217271545412
+"{'alpha': 1e-05, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}",0.008031759212029864
+"{'alpha': 1e-05, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}",0.01026393805320973
+"{'alpha': 1e-05, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}",0.007127571785766519
+"{'alpha': 1e-05, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}",0.007258433322221175
+"{'alpha': 0.0001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}",0.018013780446099758
+"{'alpha': 0.0001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}",0.009687925519168597
+"{'alpha': 0.0001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}",0.007011749714564518
+"{'alpha': 0.0001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}",0.01676569664438316
+"{'alpha': 0.0001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}",0.008102987169343375
+"{'alpha': 0.0001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}",0.007124607823549065
+"{'alpha': 0.0001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}",0.01302500623891771
+"{'alpha': 0.0001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}",0.007887812970797816
+"{'alpha': 0.0001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}",0.007372563441367773
+"{'alpha': 0.0001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}",0.010261698262877764
+"{'alpha': 0.0001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}",0.007136873445730917
+"{'alpha': 0.0001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}",0.007323007312069025
+"{'alpha': 0.001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}",0.018015365059428825
+"{'alpha': 0.001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}",0.00958548575277036
+"{'alpha': 0.001, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}",0.007079169483739048
+"{'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}",0.016771621814425264
+"{'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}",0.00807945177651003
+"{'alpha': 0.001, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}",0.007364212658081534
+"{'alpha': 0.001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}",0.013033095352843744
+"{'alpha': 0.001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}",0.007891259956284983
+"{'alpha': 0.001, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}",0.007449543386890712
+"{'alpha': 0.001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}",0.01025250891630899
+"{'alpha': 0.001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}",0.007137537597157961
+"{'alpha': 0.001, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}",0.007455361113099164
+"{'alpha': 0.01, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.0001}",0.017910562329530467
+"{'alpha': 0.01, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.001}",0.009390187569681172
+"{'alpha': 0.01, 'hidden_layer_sizes': (50, 30), 'learning_rate_init': 0.01}",0.006998963459304365
+"{'alpha': 0.01, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.0001}",0.016461606015573425
+"{'alpha': 0.01, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.001}",0.007757250072387758
+"{'alpha': 0.01, 'hidden_layer_sizes': (100, 50, 30), 'learning_rate_init': 0.01}",0.007639183433229735
+"{'alpha': 0.01, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.0001}",0.012997819599109426
+"{'alpha': 0.01, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.001}",0.007536531488371375
+"{'alpha': 0.01, 'hidden_layer_sizes': (150, 100, 50), 'learning_rate_init': 0.01}",0.00800256712473115
+"{'alpha': 0.01, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.0001}",0.010121550779239449
+"{'alpha': 0.01, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.001}",0.006925027185545966
+"{'alpha': 0.01, 'hidden_layer_sizes': (200, 100, 50), 'learning_rate_init': 0.01}",0.00740658800913351

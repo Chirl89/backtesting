@@ -33,8 +33,8 @@ def calculate_gjrgarch_volatility(data, scale_factor=100):
 
 def calculate_volatilities(data):
     volatilities = {
-        'STD': calculate_std_volatility(data),
+        #'STD': calculate_std_volatility(data),
         'EWMA': calculate_ewma_volatility(data),
-        'GJR_GARCH': calculate_gjrgarch_volatility(data)
+        #'GJR_GARCH': calculate_gjrgarch_volatility(data)
     }
     return volatilities

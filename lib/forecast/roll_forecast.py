@@ -30,7 +30,7 @@ class Forecast:
 
         with lock:
             if not os.path.exists(perceptron_model_name):
-                perceptron_train(vol[:start_date], perceptron_model_name, horizon)
+                perceptron_train(vol[:start_date], perceptron_model_name, horizon, index, volatility)
             mlp_model, aic, bic = joblib.load(perceptron_model_name)
             scaler = joblib.load(scaler_path)
 

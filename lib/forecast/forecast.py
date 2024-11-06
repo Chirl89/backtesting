@@ -19,6 +19,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.backend import clear_session
 import pandas as pd
 
+
 def calculate_aic_bic(n_params, residuals, n_samples):
     # Log likelihood
     residual_sum_of_squares = sum(residuals ** 2)
@@ -38,48 +39,132 @@ import joblib
 import numpy as np
 import gc
 
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import MinMaxScaler
+import joblib
+import numpy as np
+import gc
 
-def perceptron_train(vol, model_path, horizon, param_grid=None, cv_splits=5, random_state=42, max_iter=5000,
-                     learning_rate_init=0.001, window_size=60):
+
+def perceptron_train(vol, model_path, horizon, index, volatility, hidden_layer_sizes=(200, 100, 50), random_state=42,
+                     max_iter=5000, learning_rate_init=0.001, alpha=0.00001, window_size=60):
+    # Definir la ruta del scaler
+    scaler_path = model_path.replace('.pkl', '_scaler.pkl')
+
+    # Preprocesamiento de los datos
+    scaler = MinMaxScaler()  # Usar MinMaxScaler
+    volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))  # Asegurarse de usar numpy array
+
+    # Crear secuencias de entrenamiento
+    X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in
+                  range(len(volatilities_scaled) - window_size - horizon + 1)])
+    y = volatilities_scaled[window_size + horizon - 1: len(volatilities_scaled)].flatten()
+
+    # Entrenamiento del modelo
+    mlp = MLPRegressor(hidden_layer_sizes=hidden_layer_sizes,
+                       random_state=random_state,
+                       max_iter=max_iter,
+                       learning_rate_init=learning_rate_init,
+                       alpha=alpha,  # Regularización L2
+                       early_stopping=True,
+                       activation='tanh',  # logistic,tanh,relu
+                       verbose=0)  # verbose=0 para suprimir durante el entrenamiento
+    mlp.fit(X, y)
+
+    # Número de parámetros del modelo
+    n_params = sum([coef.size for coef in mlp.coefs_])
+
+    # Cálculo de residuales
+    y_pred = mlp.predict(X)
+    residuals = y - y_pred
+
+    # Calcular AIC y BIC (valores únicos)
+    aic, bic = calculate_aic_bic(n_params, residuals, len(y))
+
+    # Guardar el modelo, el scaler, y las métricas AIC/BIC como valores únicos
+    joblib.dump((mlp, aic, bic), model_path)
+    joblib.dump(scaler, scaler_path)
+
+    # Liberar memoria
+    del X, y, volatilities_scaled
+    gc.collect()
+
+
+"""
+from sklearn.neural_network import MLPRegressor
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import GridSearchCV, KFold
+import joblib
+import pandas as pd
+import numpy as np
+import os
+import gc
+
+
+def perceptron_train(vol, model_path, horizon, index, volatility, param_grid=None, cv_splits=5, random_state=42, max_iter=5000,
+                     learning_rate_init=0.001, window_size=60, output_dir="output"):
     if param_grid is None:
-        # Grid de hiperparámetros ampliado
+        # Definir un grid de hiperparámetros amplio
         param_grid = {
             'hidden_layer_sizes': [(50, 30), (100, 50, 30), (150, 100, 50), (200, 100, 50)],
             'learning_rate_init': [0.0001, 0.001, 0.01],
-            'alpha': [0.00001, 0.0001, 0.001, 0.01]  # Regularización
+            'alpha': [0.00001, 0.0001, 0.001, 0.01]  # Regularización L2
         }
 
+    # Preprocesamiento de los datos
     scaler = MinMaxScaler()
-    volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))
+    volatilities_scaled = scaler.fit_transform(vol.values.reshape(-1, 1))  # Asegurarse de usar numpy array
     X = np.array([volatilities_scaled[i:i + window_size].flatten() for i in
                   range(len(volatilities_scaled) - window_size - horizon + 1)])
     y = volatilities_scaled[window_size + horizon - 1: len(volatilities_scaled)].flatten()
 
     # Configuración de K-Fold y GridSearch
     kfold = KFold(n_splits=cv_splits, shuffle=True, random_state=random_state)
-    mlp = MLPRegressor(random_state=random_state,
-                       max_iter=max_iter,
-                       early_stopping=True,
-                       activation='relu', #logistic,tanh,relu
-                       verbose=0)
+    mlp = MLPRegressor(random_state=random_state, max_iter=max_iter,
+                       activation='tanh', #logistic,tanh,relu
+                       )
 
-    grid_search = GridSearchCV(estimator=mlp, param_grid=param_grid, cv=kfold, scoring='neg_mean_squared_error')
+    # GridSearchCV para optimización de hiperparámetros
+    grid_search = GridSearchCV(estimator=mlp, param_grid=param_grid, cv=kfold, scoring='neg_mean_squared_error', return_train_score=True)
     grid_search.fit(X, y)
 
-    # Mejor modelo y predicciones
+    # Obtener el mejor modelo y el mejor conjunto de hiperparámetros
     best_model = grid_search.best_estimator_
+    best_params = grid_search.best_params_
+    best_score = -grid_search.best_score_  # Convertir el score negativo a positivo para interpretación
+
+    # Guardar los resultados de cada combinación en un archivo CSV
+    results_df = pd.DataFrame(grid_search.cv_results_)
+    results_df['mean_test_score'] = -results_df['mean_test_score']  # Convertimos el score negativo en positivo para que sea interpretable
+    results_df = results_df[['params', 'mean_test_score']]  # Mantener solo los parámetros y el score de test
+
+    # Generar el nombre del archivo de resultados
+    output_file = os.path.join(output_dir, f"perceptron_hyperparameters_results_tanh_{volatility}_{index}_{horizon}days.csv")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    results_df.to_csv(output_file, index=False)
+
+    # Guardar el mejor modelo y sus métricas
     y_pred = best_model.predict(X)
     residuals = y - y_pred
-
     n_params = sum([coef.size for coef in best_model.coefs_])
     aic, bic = calculate_aic_bic(n_params, residuals, len(y))
-
-    # Guardar el mejor modelo, el scaler, y las métricas
     joblib.dump((best_model, aic, bic), model_path)
     joblib.dump(scaler, model_path.replace('.pkl', '_scaler.pkl'))
 
+    # Crear un archivo TXT con el mejor conjunto de hiperparámetros y sus métricas
+    best_params_output = os.path.join(output_dir, f"best_perceptron_hyperparameters_tanh_{volatility}_{index}_{horizon}days.txt")
+    with open(best_params_output, "w") as f:
+        f.write("Mejores Hiperparámetros para Perceptron:\n")
+        f.write(f"Parámetros: {best_params}\n")
+        f.write(f"Error Cuadrático Medio (MSE) de la mejor combinación: {best_score:.4f}\n")
+        f.write("\nResultados de cada combinación de hiperparámetros:\n")
+        for _, row in results_df.iterrows():
+            f.write(f"Parámetros: {row['params']}, MSE: {row['mean_test_score']:.4f}\n")
+
+    # Liberar memoria
     del X, y, volatilities_scaled
-    gc.collect()
+    gc.collect()"""
 
 
 def perceptron_forecast(vol, model, scaler, horizon, window_size=60):
@@ -103,58 +188,60 @@ def perceptron_forecast(vol, model, scaler, horizon, window_size=60):
 
 # 2. LSTM
 
-"""def lstm_train(vol, model_path, horizon, time_step=60):
+def lstm_train(vol, model_path, horizon, index, volatility, units=200, dropout_rate=0.3,
+               epochs=50, batch_size=32, time_step=60):
     # Definir la ruta del scaler
     scaler_path = model_path.replace('.keras', '_scaler.pkl')
 
     # Preprocesamiento de los datos
     set_entrenamiento = vol.to_frame()
-    sc = MinMaxScaler(feature_range=(0, 1))
-    set_entrenamiento_escalado = sc.fit_transform(set_entrenamiento)
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    set_entrenamiento_escalado = scaler.fit_transform(set_entrenamiento)
     X = np.array([set_entrenamiento_escalado[i - time_step:i, 0] for i in
                   range(time_step, len(set_entrenamiento_escalado) - horizon + 1)])
     Y = set_entrenamiento_escalado[time_step + horizon - 1: len(set_entrenamiento_escalado), 0]
     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
 
     # Entrenamiento del modelo
-    modelo = Sequential()
-    modelo.add(Input(shape=(X.shape[1], 1)))
-
-    modelo.add(LSTM(units=50, return_sequences=True))
-    modelo.add(Dropout(0.2))
-    modelo.add(LSTM(units=50, return_sequences=True))
-    modelo.add(Dropout(0.2))
-    modelo.add(LSTM(units=50))
-    modelo.add(Dropout(0.2))
-
-    modelo.add(Dense(units=1))
-    modelo.add(Activation('relu'))
-    modelo.compile(optimizer='adam', loss='mse')
+    model = Sequential([
+        Input(shape=(time_step, 1)),
+        LSTM(units=units, return_sequences=True),
+        Dropout(dropout_rate),
+        LSTM(units=units, return_sequences=True),
+        Dropout(dropout_rate),
+        LSTM(units=units),
+        Dropout(dropout_rate),
+        Dense(units=1),
+        Activation('relu')
+    ])
+    model.compile(optimizer='adam', loss='mse')
 
     early_stopping = EarlyStopping(monitor='loss', patience=3, restore_best_weights=True)
-    modelo.fit(X, Y, epochs=50, batch_size=32, verbose=0, callbacks=[early_stopping])
+    model.fit(X, Y, epochs=epochs, batch_size=batch_size, verbose=0, callbacks=[early_stopping])
 
     # Obtener predicciones para los datos de entrenamiento
-    Y_pred = modelo.predict(X, verbose=0)
+    Y_pred = model.predict(X, verbose=0)
 
     # Cálculo de los residuales
     residuals = Y - Y_pred.flatten()
 
     # Número de parámetros (pesos) del modelo
-    n_params = modelo.count_params()
+    n_params = model.count_params()
 
     # Calcular AIC y BIC como valores únicos
     aic, bic = calculate_aic_bic(n_params, residuals, len(Y))
 
     # Guardar el modelo, el scaler, y las métricas AIC/BIC
-    modelo.save(model_path)
-    joblib.dump(sc, scaler_path)
+    model.save(model_path)
+    joblib.dump(scaler, scaler_path)
     joblib.dump((aic, bic), model_path.replace('.keras', '_metrics.pkl'))
 
     # Liberar memoria
     del X, Y, set_entrenamiento_escalado
-    gc.collect()"""
+    gc.collect()
 
+
+"""
 import os
 import joblib
 import gc
@@ -272,6 +359,7 @@ def lstm_train(vol, model_path, horizon, index, volatility, param_grid=None, cv_
     # Liberar memoria
     del X, Y, volatilities_scaled
     gc.collect()
+"""
 
 
 def lstm_forecast(vol, model, scaler, horizon, time_step=60):
@@ -297,7 +385,8 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
 
 # 3. Random Forest
 
-"""def random_forest_train(vol, model_path, horizon, n_estimators=50, random_state=42, window_size=60):
+def random_forest_train(vol, model_path, horizon, index, volatility, n_estimators=300, max_depth=10,
+                        min_samples_split=2, min_samples_leaf=4, random_state=42, window_size=60):
     # Definir la ruta del scaler
     scaler_path = model_path.replace('.pkl', '_scaler.pkl')
 
@@ -309,7 +398,8 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
     y = volatilities_scaled[window_size + horizon - 1: len(volatilities_scaled)].flatten()
 
     # Entrenamiento del modelo
-    rf = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state, n_jobs=-1, verbose=0)
+    rf = RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth, min_samples_split=min_samples_split,
+                               min_samples_leaf=min_samples_leaf, random_state=random_state, n_jobs=-1)
     rf.fit(X, y)
 
     # Cálculo de los residuales
@@ -328,11 +418,10 @@ def lstm_forecast(vol, model, scaler, horizon, time_step=60):
 
     # Liberar memoria
     del X, y, volatilities_scaled
-    gc.collect()"""
+    gc.collect()
 
 
-
-
+"""
 def random_forest_train(vol, model_path, horizon, index, volatility, param_grid=None, cv_splits=5, window_size=60, random_state=42, output_dir="output"):
     if param_grid is None:
         # Definimos un grid de hiperparámetros amplio
@@ -395,6 +484,7 @@ def random_forest_train(vol, model_path, horizon, index, volatility, param_grid=
     # Liberar memoria
     del X, y, volatilities_scaled
     gc.collect()
+"""
 
 
 def random_forest_forecast(vol, model, scaler, horizon, window_size=60):
