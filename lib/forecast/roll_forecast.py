@@ -1,5 +1,6 @@
 import os
 
+# Suppress TensorFlow log messages
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import sys
 import pandas as pd
@@ -10,9 +11,17 @@ from multiprocessing import Manager
 from tensorflow.keras.models import load_model
 import joblib
 
-
 class Forecast:
     def __init__(self, index_dict, forecast_dict, start_calculation_date, end_calculation_date, horizons):
+        """
+        Initialize Forecast class with index data, forecast configurations, date range, and horizons.
+
+        :param index_dict: Dictionary of index data.
+        :param forecast_dict: Dictionary to store forecast results.
+        :param start_calculation_date: Start date for calculations.
+        :param end_calculation_date: End date for calculations.
+        :param horizons: List of forecast horizons.
+        """
         self.index_dict = index_dict
         self.forecast_dict = forecast_dict
         self.start_calculation_date = start_calculation_date
@@ -21,6 +30,14 @@ class Forecast:
 
     def roll_perceptron_forecast(self, vol, start_date, end_date, horizon, index, volatility, global_counter, lock,
                                  total_tasks):
+        """
+        Run rolling forecast using MLP (Perceptron) model for volatility forecasting.
+
+        :param vol: Volatility data.
+        :param start_date: Start date for the forecast range.
+        :param end_date: End date for the forecast range.
+        :param horizon: Forecast horizon.
+        """
         forecast = {'VOLATILITY': []}
         vol_range = vol[start_date:end_date]
         perceptron_model_name = f'lib/volatilidades/models/perceptron_{index}_{volatility}_{horizon}.pkl'
@@ -34,6 +51,7 @@ class Forecast:
             mlp_model, aic, bic = joblib.load(perceptron_model_name)
             scaler = joblib.load(scaler_path)
 
+        # Forecast for each date within the range
         for date in vol_range.index:
             vol_date = vol[:date]
 
@@ -44,7 +62,7 @@ class Forecast:
             del forecast_data, vol_date
             gc.collect()
 
-        # Solo guardamos los valores únicos de AIC y BIC
+        # Store unique AIC and BIC values
         forecast['AIC'] = aic
         forecast['BIC'] = bic
 
@@ -55,6 +73,14 @@ class Forecast:
 
     def roll_lstm_forecast(self, vol, start_date, end_date, horizon, index, volatility, global_counter, lock,
                            total_tasks):
+        """
+        Run rolling forecast using LSTM model for volatility forecasting.
+
+        :param vol: Volatility data.
+        :param start_date: Start date for the forecast range.
+        :param end_date: End date for the forecast range.
+        :param horizon: Forecast horizon.
+        """
         forecast = {'VOLATILITY': []}
         vol_range = vol[start_date:end_date]
         lstm_model_path = f'lib/volatilidades/models/lstm_{index}_{volatility}_{horizon}.keras'
@@ -68,6 +94,7 @@ class Forecast:
             scaler = joblib.load(lstm_model_path.replace('.keras', '_scaler.pkl'))
             aic, bic = joblib.load(lstm_model_path.replace('.keras', '_metrics.pkl'))
 
+        # Forecast for each date within the range
         for date in vol_range.index:
             vol_date = vol[:date]
 
@@ -78,7 +105,7 @@ class Forecast:
             del forecast_data, vol_date
             gc.collect()
 
-        # Solo guardamos los valores únicos de AIC y BIC
+        # Store unique AIC and BIC values
         forecast['AIC'] = aic
         forecast['BIC'] = bic
 
@@ -89,6 +116,14 @@ class Forecast:
 
     def roll_random_forest_forecast(self, vol, start_date, end_date, horizon, index, volatility, global_counter, lock,
                                     total_tasks):
+        """
+        Run rolling forecast using Random Forest model for volatility forecasting.
+
+        :param vol: Volatility data.
+        :param start_date: Start date for the forecast range.
+        :param end_date: End date for the forecast range.
+        :param horizon: Forecast horizon.
+        """
         forecast = {'VOLATILITY': []}
         vol_range = vol[start_date:end_date]
         rf_model_name = f'lib/volatilidades/models/random_forest_{index}_{volatility}_{horizon}.pkl'
@@ -102,6 +137,7 @@ class Forecast:
             rf_model, aic, bic = joblib.load(rf_model_name)
             scaler = joblib.load(scaler_path)
 
+        # Forecast for each date within the range
         for date in vol_range.index:
             vol_date = vol[:date]
 
@@ -112,7 +148,7 @@ class Forecast:
             del forecast_data, vol_date
             gc.collect()
 
-        # Solo guardamos los valores únicos de AIC y BIC
+        # Store unique AIC and BIC values
         forecast['AIC'] = aic
         forecast['BIC'] = bic
 
@@ -123,8 +159,16 @@ class Forecast:
 
     def run_forecast_parallel(self, vol, start_calculation_date, end_calculation_date, horizon, index, volatility,
                               global_counter, lock, total_tasks):
+        """
+        Run parallel forecasting with Perceptron, LSTM, and Random Forest models.
+
+        :param vol: Volatility data.
+        :param start_calculation_date: Start date for forecast.
+        :param end_calculation_date: End date for forecast.
+        :param horizon: Forecast horizon.
+        """
         results = {}
-        futures = []  # Asegurarse de que `futures` esté siempre inicializado
+        futures = []
         try:
             with ThreadPoolExecutor() as executor:
                 futures = [
@@ -136,6 +180,7 @@ class Forecast:
                                     horizon, index, volatility, global_counter, lock, total_tasks)
                 ]
 
+                # Process results as they complete
                 for future in as_completed(futures):
                     if future == futures[0]:
                         results['PERCEPTRON'] = future.result()
@@ -144,6 +189,7 @@ class Forecast:
                     elif future == futures[2]:
                         results['RANDOM_FOREST'] = future.result()
 
+                    # Update global progress
                     with lock:
                         global_counter.value += 1
                     progress = (global_counter.value / total_tasks) * 100
@@ -151,7 +197,7 @@ class Forecast:
                     sys.stdout.flush()
 
         except Exception as e:
-            print(f"Error en la predicción: {e}")
+            print(f"Error in forecasting: {e}")
 
         finally:
             del futures
@@ -159,26 +205,26 @@ class Forecast:
         return results
 
     def clean_up_models(self):
-        # Eliminar todos los modelos, escaladores y métricas generados
+        """
+        Delete all generated models, scalers, and metrics files.
+        """
         for index in self.index_dict:
             for vol in self.index_dict[index]['Volatilities']:
                 for horizon in self.horizons:
-                    # Definir los nombres de los archivos de modelo
+                    # Define model file names
                     perceptron_model_name = f'lib/volatilidades/models/perceptron_{index}_{vol}_{horizon}.pkl'
                     lstm_model_path = f'lib/volatilidades/models/lstm_{index}_{vol}_{horizon}.keras'
                     rf_model_name = f'lib/volatilidades/models/random_forest_{index}_{vol}_{horizon}.pkl'
 
-                    # Definir los nombres de los escaladores y métricas
+                    # Define scaler and metrics file paths
                     perceptron_scaler_path = perceptron_model_name.replace('.pkl', '_scaler.pkl')
                     lstm_scaler_path = lstm_model_path.replace('.keras', '_scaler.pkl')
                     rf_scaler_path = rf_model_name.replace('.pkl', '_scaler.pkl')
-
-                    # Archivos de métricas AIC/BIC (_metrics.pkl)
                     lstm_metrics_path = lstm_model_path.replace('.keras', '_metrics.pkl')
                     perceptron_metrics_path = perceptron_model_name.replace('.pkl', '_metrics.pkl')
                     rf_metrics_path = rf_model_name.replace('.pkl', '_metrics.pkl')
 
-                    # Borrar los archivos si existen
+                    # Delete files if they exist
                     for file_path in [
                         perceptron_model_name, perceptron_scaler_path, perceptron_metrics_path,
                         lstm_model_path, lstm_scaler_path, lstm_metrics_path,
@@ -188,9 +234,12 @@ class Forecast:
                             os.remove(file_path)
 
     def run_forecast(self):
+        """
+        Run forecasts for all indices, volatilities, and horizons using parallel processing.
+        """
         total_indices = len(self.index_dict)
         total_volatilities = sum(len(v['Volatilities']) for v in self.index_dict.values())
-        total_tasks = total_indices * total_volatilities * 3  # 3 métodos de predicción
+        total_tasks = total_indices * total_volatilities * 3  # 3 prediction methods
 
         with Manager() as manager:
             global_counter = manager.Value('i', 0)
@@ -220,14 +269,14 @@ class Forecast:
                                 task_counter += 1
                                 progress = (global_counter.value / total_tasks) * 100
                                 sys.stdout.write(f'\rProgreso global forecasting: {progress:.2f}%'
-                                                 f'. Ejecutado con {idx_vol}/{num_volatilities} volatilidades de '
-                                                 f'{idx_index}/{total_indices} índices ')
+                                                 f'. Executed for {idx_vol}/{num_volatilities} volatilities of '
+                                                 f'{idx_index}/{total_indices} indices ')
                                 sys.stdout.flush()
 
                                 del result
                                 gc.collect()
                             except Exception as exc:
-                                print(f'Error en la predicción para horizon {horizon}: {exc}')
+                                print(f'Error in forecasting for horizon {horizon}: {exc}')
 
                 self.forecast_dict[index] = deepcopy(forecast_dict_aux)
                 del forecast_dict_aux
@@ -236,51 +285,52 @@ class Forecast:
     def roll_single_forecast(self, vol, start_calculation_date, end_calculation_date, horizon, index, volatility,
                              global_counter, lock, total_tasks, method):
         """
-        Ejecuta el forecasting para un solo método de predicción (perceptron, lstm o random_forest).
+        Execute a forecast using a single prediction method (Perceptron, LSTM, or Random Forest).
         """
         results = {}
         try:
             if method == 'perceptron':
-                # Ejecutar sólo Perceptron
                 results['PERCEPTRON'] = self.roll_perceptron_forecast(vol, start_calculation_date,
                                                                       end_calculation_date,
                                                                       horizon, index, volatility, global_counter,
                                                                       lock,
                                                                       total_tasks)
             elif method == 'lstm':
-                # Ejecutar sólo LSTM
                 results['LSTM'] = self.roll_lstm_forecast(vol, start_calculation_date, end_calculation_date,
                                                           horizon, index, volatility, global_counter, lock,
                                                           total_tasks)
             elif method == 'random_forest':
-                # Ejecutar sólo Random Forest
                 results['RANDOM_FOREST'] = self.roll_random_forest_forecast(vol, start_calculation_date,
                                                                             end_calculation_date,
                                                                             horizon, index, volatility,
                                                                             global_counter, lock,
                                                                             total_tasks)
             else:
-                print(f"Método {method} no reconocido.")
+                print(f"Method {method} not recognized.")
                 return
 
-            # Actualización del progreso
             with lock:
                 global_counter.value += 1
             progress = (global_counter.value / total_tasks) * 100
-            sys.stdout.write(f'\rProgreso global forecasting: {progress:.2f}%')
+            sys.stdout.write(f'\rGlobal forecasting progress: {progress:.2f}%')
             sys.stdout.flush()
 
         except Exception as e:
-            print(f"Error en la predicción: {e}")
+            print(f"Error in forecasting: {e}")
 
         finally:
             gc.collect()
         return results
 
     def run_single_forecast(self, method='random_forest'):
+        """
+        Run forecasts for a single method on all indices, volatilities, and horizons.
+
+        :param method: Forecasting method to use ('perceptron', 'lstm', 'random_forest').
+        """
         total_indices = len(self.index_dict)
         total_volatilities = sum(len(v['Volatilities']) for v in self.index_dict.values())
-        total_tasks = total_indices * total_volatilities  # Solo un método de predicción
+        total_tasks = total_indices * total_volatilities
 
         with Manager() as manager:
             global_counter = manager.Value('i', 0)

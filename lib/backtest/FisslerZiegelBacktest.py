@@ -6,22 +6,29 @@ class FisslerZiegelBacktest:
     Implements the Fissler-Ziegel backtesting model for Expected Shortfall.
     This test evaluates the joint accuracy of VaR and ES using scoring functions.
 
+    Reference:
     Fissler, Tobias, and Johanna F. Ziegel. "Higher order elicitability and Osband's principle."
     The Annals of Statistics 44.4 (2016): 1680-1707.
     """
 
     def __init__(self, X_obs, X, VaRLevel, VaR, ES, nSim, alpha):
         """
-        Initialize the FisslerZiegelBacktest class with inputs similar to previous classes.
-º
-        Parameters:
-        - X_obs (np.array): Array of observed portfolio returns.
-        - X (function): Function that simulates portfolio returns under H0.
-        - VaRLevel (float): VaR level (e.g., 0.05 for 95%).
-        - VaR (np.array): Projected VaR estimates for each period.
-        - ES (np.array): Projected ES estimates for each period.
-        - nSim (int): Number of Monte Carlo simulations.
-        - alpha (float): Significance level for the test (e.g., 0.05).
+        Initialize the FisslerZiegelBacktest class with input parameters.
+
+        :param X_obs: Array of observed portfolio returns.
+        :type X_obs: np.array
+        :param X: Function that simulates portfolio returns under the null hypothesis (H0).
+        :type X: function
+        :param VaRLevel: VaR confidence level (e.g., 0.05 for 95%).
+        :type VaRLevel: float
+        :param VaR: Array of projected Value at Risk (VaR) estimates for each period.
+        :type VaR: np.array
+        :param ES: Array of projected Expected Shortfall (ES) estimates for each period.
+        :type ES: np.array
+        :param nSim: Number of Monte Carlo simulations to perform.
+        :type nSim: int
+        :param alpha: Significance level for the test (e.g., 0.05).
+        :type alpha: float
         """
         self.mean_breach_value = 0
         self.VaR_breaches = 0
@@ -40,8 +47,14 @@ class FisslerZiegelBacktest:
         """
         Fissler-Ziegel scoring function for joint evaluation of VaR and ES.
 
-        Scoring function S(VaR, ES; x) defined as:
-            S(VaR, ES; x) = (1/ES) * (VaR - x) * (1{VaR >= x} - alpha) + (1 - VaR/ES)
+        :param x: Observed returns.
+        :type x: np.array
+        :param VaR: Projected Value at Risk (VaR) estimate.
+        :type VaR: np.array
+        :param ES: Projected Expected Shortfall (ES) estimate.
+        :type ES: np.array
+        :return: Scoring function values for each observation.
+        :rtype: np.array
         """
         indicator = (x <= VaR).astype(float)
         score = ((1 / ES) * (VaR - x) * (indicator - self.VaRLevel) + (1 - VaR / ES))
@@ -49,9 +62,12 @@ class FisslerZiegelBacktest:
 
     def statistic(self, X):
         """
-        Calculate the Fissler-Ziegel test statistic.
+        Calculate the Fissler-Ziegel test statistic as the mean of the scoring function.
 
-        The test statistic Z is the mean of the scoring function over all observations.
+        :param X: Simulated or observed returns.
+        :type X: np.array
+        :return: The test statistic (mean of scoring function).
+        :rtype: float
         """
         scores = self.scoring_function(X, self.VaR, self.ES)
         return np.mean(scores)
@@ -60,8 +76,8 @@ class FisslerZiegelBacktest:
         """
         Perform Monte Carlo simulations to obtain the critical value and p-value.
 
-        The p-value is the fraction of scenarios for which the simulated test statistic
-        is smaller than the test statistic evaluated at the observed portfolio returns.
+        The p-value is the fraction of scenarios where the simulated test statistic
+        is smaller than the observed test statistic.
         """
         self.Z_obs = self.statistic(self.X_obs)
         I_obs = (self.X_obs + self.VaR < 0)
@@ -82,7 +98,7 @@ class FisslerZiegelBacktest:
 
     def print(self):
         """
-        Prints the results of the test and other useful information.
+        Prints a summary of the Fissler-Ziegel test results.
         """
         print('----------------------------------------------------------------')
         print('          Fissler-Ziegel Expected Shortfall Test by Simulation   ')
@@ -97,7 +113,10 @@ class FisslerZiegelBacktest:
 
     def get_results_summary(self):
         """
-        Returns a summary of the test results and other useful information as a string.
+        Returns a summary of the Fissler-Ziegel test results as a string.
+
+        :return: Summary of test results.
+        :rtype: str
         """
         result = []
         result.append('----------------------------------------------------------------')
@@ -116,5 +135,8 @@ class FisslerZiegelBacktest:
     def backtest_out(self):
         """
         Outputs key results for further analysis.
+
+        :return: Tuple containing the number of VaR breaches and the mean breach value.
+        :rtype: tuple(int, float)
         """
         return self.VaR_breaches, self.mean_breach_value

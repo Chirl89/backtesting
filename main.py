@@ -1,4 +1,6 @@
 import time
+
+from lib.backtest.FisslerZiegelBacktest import FisslerZiegelBacktest
 from lib.dicts.index import Index
 from lib.data.data_import_export import DataImporter, DataExporter
 from lib.data.data_parser import ProcessData
@@ -6,11 +8,11 @@ from lib.forecast.roll_forecast import *
 from lib.backtest.backtest import BacktestManager
 from lib.auxiliares.metrics import calculate_metrics
 
-indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+indexes = ['SAN.MC', 'BBVA.MC']# , 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 input_method = 'yf'
 start_get_data = '2021-10-04'
 end_get_data = '2024-10-04'
-start_calculation_date = '2023-10-04'
+start_calculation_date = '2024-09-04'
 end_calculation_date = '2024-10-04'
 confidence_level = 0.99
 horizons = [1, 10]
@@ -51,4 +53,3 @@ if __name__ == "__main__":
 
     total_time = end_time - start_time
     print(f"Tiempo total de ejecución: {total_time:.2f} segundos")
-

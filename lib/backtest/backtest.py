@@ -9,11 +9,14 @@ from lib.auxiliares.ES import expected_shortfall
 class BacktestManager:
     def __init__(self, index_dict, forecast_dict, confidence_level):
         """
-        Constructor para la clase BacktestManager.
+        Initializes the BacktestManager class with index data, forecast data, and confidence level.
 
-        :param index_dict: Diccionario con los datos del índice, incluyendo retornos reales.
-        :param forecast_dict: Diccionario con los datos de forecasting generados.
-        :param confidence_level: Nivel de confianza para el backtesting (ej. 0.95).
+        :param index_dict: Dictionary containing index data, including actual returns.
+        :type index_dict: dict
+        :param forecast_dict: Dictionary containing generated forecast data.
+        :type forecast_dict: dict
+        :param confidence_level: Confidence level for backtesting (e.g., 0.95).
+        :type confidence_level: float
         """
         self.index_dict = index_dict
         self.forecast_dict = forecast_dict
@@ -22,7 +25,8 @@ class BacktestManager:
 
     def run_backtest_rige(self):
         """
-        Ejecuta el backtest para cada índice, volatilidad, horizonte y modelo de predicción.
+        Runs the Ridge backtest for each index, volatility, horizon, and prediction model.
+        Iterates over the forecast dictionary to execute backtests and store results.
         """
         for index, volatilities in self.forecast_dict.items():
             for volatility, horizons in volatilities.items():
@@ -33,7 +37,8 @@ class BacktestManager:
 
     def run_backtest_multiquantile(self):
         """
-        Ejecuta el backtest para cada índice, volatilidad, horizonte y modelo de predicción.
+        Runs the MultiQuantile backtest for each index, volatility, horizon, and prediction model.
+        Iterates over the forecast dictionary to execute backtests and store results.
         """
         for index, volatilities in self.forecast_dict.items():
             for volatility, horizons in volatilities.items():
@@ -44,7 +49,8 @@ class BacktestManager:
 
     def run_backtest_fisslerziegel(self):
         """
-        Ejecuta el backtest para cada índice, volatilidad, horizonte y modelo de predicción.
+        Runs the Fissler-Ziegel backtest for each index, volatility, horizon, and prediction model.
+        Iterates over the forecast dictionary to execute backtests and store results.
         """
         for index, volatilities in self.forecast_dict.items():
             for volatility, horizons in volatilities.items():
@@ -55,7 +61,16 @@ class BacktestManager:
 
     def _ensure_backtest_structure(self, index, volatility, horizon, model):
         """
-        Asegura que la estructura de diccionarios para el backtest esté correctamente inicializada.
+        Ensures that the dictionary structure for storing backtest results is correctly initialized.
+
+        :param index: The index name.
+        :type index: str
+        :param volatility: The type of volatility.
+        :type volatility: str
+        :param horizon: The forecast horizon.
+        :type horizon: str or int
+        :param model: The name of the forecast model.
+        :type model: str
         """
         if volatility not in self.backtest_dict[index]:
             self.backtest_dict[index][volatility] = {}
@@ -66,7 +81,13 @@ class BacktestManager:
 
     def _execute_backtest_ridge(self, index, volatility, horizon, model, results):
         """
-        Ejecuta el backtest para un modelo de predicción específico y guarda los resultados.
+        Executes the Ridge backtest for a specific prediction model and stores the results.
+
+        :param index: The index name.
+        :param volatility: The type of volatility.
+        :param horizon: The forecast horizon.
+        :param model: The name of the forecast model.
+        :param results: The forecast results data containing predicted volatilities.
         """
         real_returns = self.index_dict[index]['Real Returns']
         predicted_volatility = results['VOLATILITY'].values
@@ -87,7 +108,13 @@ class BacktestManager:
 
     def _execute_backtest_multiquantile(self, index, volatility, horizon, model, results):
         """
-        Ejecuta el backtest para un modelo de predicción específico y guarda los resultados.
+        Executes the MultiQuantile backtest for a specific prediction model and stores the results.
+
+        :param index: The index name.
+        :param volatility: The type of volatility.
+        :param horizon: The forecast horizon.
+        :param model: The name of the forecast model.
+        :param results: The forecast results data containing predicted volatilities.
         """
         real_returns = self.index_dict[index]['Real Returns']
         predicted_volatility = results['VOLATILITY'].values
@@ -107,7 +134,13 @@ class BacktestManager:
 
     def _execute_backtest_fisslerziegel(self, index, volatility, horizon, model, results):
         """
-        Ejecuta el backtest para un modelo de predicción específico y guarda los resultados.
+        Executes the Fissler-Ziegel backtest for a specific prediction model and stores the results.
+
+        :param index: The index name.
+        :param volatility: The type of volatility.
+        :param horizon: The forecast horizon.
+        :param model: The name of the forecast model.
+        :param results: The forecast results data containing predicted volatilities.
         """
         real_returns = self.index_dict[index]['Real Returns']
         predicted_volatility = results['VOLATILITY'].values
@@ -128,8 +161,9 @@ class BacktestManager:
 
     def get_backtest_dict(self):
         """
-        Devuelve el diccionario con los resultados del backtest.
+        Returns the dictionary with backtest results.
+
+        :return: Dictionary with all backtest results.
+        :rtype: dict
         """
         return self.backtest_dict
-
-# Ejemplo de uso
