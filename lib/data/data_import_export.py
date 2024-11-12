@@ -200,7 +200,7 @@ class DataExporter:
             for volatility, horizons in volatilities.items():
                 for horizon, models in horizons.items():
                     for model_name, forecast_df in models.items():
-                        forecast_df_reset = forecast_df.reset_index()  # Convertir el índice en columna
+                        forecast_df_reset = forecast_df.reset_index()
                         for _, row in forecast_df_reset.iterrows():
                             row_data = row.to_dict()
                             row_data['Index'] = index
