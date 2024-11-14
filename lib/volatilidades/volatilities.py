@@ -64,8 +64,8 @@ def calculate_volatilities(data):
     :return: Dictionary with different types of volatility measures as Series.
     """
     volatilities = {
-        # 'STD': calculate_std_volatility(data),  # Uncomment to include standard deviation volatility
+        'STD': calculate_std_volatility(data),  # Uncomment to include standard deviation volatility
         'EWMA': calculate_ewma_volatility(data),
-        # 'GJR_GARCH': calculate_gjrgarch_volatility(data)  # Uncomment to include GJR-GARCH volatility
+        'GJR_GARCH': calculate_gjrgarch_volatility(data)  # Uncomment to include GJR-GARCH volatility
     }
     return volatilities

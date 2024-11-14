@@ -38,11 +38,15 @@ def calculate_aic_bic(n_params, residuals, n_samples):
 
     return aic, bic
 
+
 def perceptron_train(vol, model_path, horizon, index, volatility, hidden_layer_sizes=(200, 100, 50), random_state=42,
                      max_iter=5000, learning_rate_init=0.001, alpha=0.00001, window_size=60):
     """
     Train an MLP (Perceptron) model for volatility forecasting.
 
+    :param alpha:
+    :param learning_rate_init:
+    :param max_iter:
     :param vol: Series of volatility data for training.
     :param model_path: Path to save the trained model.
     :param horizon: Forecast horizon.
@@ -68,7 +72,8 @@ def perceptron_train(vol, model_path, horizon, index, volatility, hidden_layer_s
                        learning_rate_init=learning_rate_init,
                        alpha=alpha,
                        early_stopping=True,
-                       activation='tanh',
+                       # logistic, tanh, relu
+                       activation='relu',
                        verbose=0)
     mlp.fit(X, y)
 

@@ -5,7 +5,7 @@ from lib.forecast.roll_forecast import *
 from lib.backtest.backtest import BacktestManager
 
 
-indexes = ['SAN.MC']#, 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
+indexes = ['SAN.MC', 'BBVA.MC', 'SAB.MC', '^IBEX', 'BBVAE.MC', 'XTC5.MI', 'EURUSD=X']
 input_method = 'yf'
 start_get_data = '2021-09-17'
 end_get_data = '2024-09-17'
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     forecast_dict = index_instance.get_forecast_dict()
 
     forecast_instance = Forecast(data_dict, forecast_dict, start_calculation_date, end_calculation_date, horizons)
-    forecast_instance.run_single_forecast(method='random_forest')
+    forecast_instance.run_single_forecast(method='lstm')
 
     backtest_manager = BacktestManager(data_dict, forecast_dict, confidence_level)
     backtest_manager.run_backtest_multiquantile()
