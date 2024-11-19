@@ -25,6 +25,7 @@ process_data_instance.fill_index_dict(
 )
 if __name__ == "__main__":
     data_dict = index_instance.get_index_dict()
+
     forecast_dict = index_instance.get_forecast_dict()
 
     forecast_instance = Forecast(data_dict, forecast_dict, start_calculation_date, end_calculation_date, horizons)
