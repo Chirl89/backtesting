@@ -28,6 +28,7 @@ if __name__ == "__main__":
     forecast_dict = index_instance.get_forecast_dict()
 
     forecast_instance = Forecast(data_dict, forecast_dict, start_calculation_date, end_calculation_date, horizons)
+    # perceptron, lstm, random_forest
     forecast_instance.run_single_forecast(method='random_forest')
 
     backtest_manager = BacktestManager(data_dict, forecast_dict, confidence_level)
