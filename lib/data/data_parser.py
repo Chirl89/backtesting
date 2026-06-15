@@ -33,7 +33,7 @@ class ProcessData:
             df = self.data_instance.return_data(index)
 
             # Calculate Log Returns
-            df['Log Returns'] = np.log(df['Adj Close'] / df['Adj Close'].shift(1))
+            df['Log Returns'] = np.log(df['Close'] / df['Close'].shift(1))
             df.dropna(inplace=True)
 
             # Store processed data in index_dict
